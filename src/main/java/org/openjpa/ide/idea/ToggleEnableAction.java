@@ -14,16 +14,14 @@ public class ToggleEnableAction extends ToggleAction {
     @Override
     public boolean isSelected(final AnActionEvent anActionEvent) {
         final ProjectComponent openJpaProjectComponent = getOpenJpaEnhancerComponent(anActionEvent);
-        final PersistentState openJpaProjectComponentState = openJpaProjectComponent == null ? null : openJpaProjectComponent.getState();
+        var state = PersistentState.getInstance(anActionEvent.getProject());
+        final PersistentState openJpaProjectComponentState = openJpaProjectComponent == null ? null : state;
         return openJpaProjectComponentState != null && openJpaProjectComponentState.isEnhancerEnabled();
     }
 
     @Override
     public void setSelected(final AnActionEvent anActionEvent, final boolean b) {
-        final ProjectComponent dNEProjectComponent = getOpenJpaEnhancerComponent(anActionEvent);
-        if (dNEProjectComponent != null) {
-            dNEProjectComponent.setEnhancerEnabled(b);
-        }
+        PersistentState.getInstance(anActionEvent.getProject()).setEnhancerEnabled(b);
     }
 
     private static ProjectComponent getOpenJpaEnhancerComponent(final AnActionEvent anActionEvent) {

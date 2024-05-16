@@ -1,5 +1,26 @@
 package org.openjpa.ide.idea;
 
+import com.intellij.openapi.application.Application;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.compiler.CompileContext;
+import com.intellij.openapi.compiler.CompileScope;
+import com.intellij.openapi.compiler.CompilerManager;
+import com.intellij.openapi.compiler.CompilerMessageCategory;
+import com.intellij.openapi.compiler.CompilerPaths;
+import com.intellij.openapi.compiler.FileProcessingCompiler;
+import com.intellij.openapi.compiler.SourceInstrumentingCompiler;
+import com.intellij.openapi.compiler.TimestampValidityState;
+import com.intellij.openapi.compiler.ValidityState;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiClass;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.openjpa.ide.idea.integration.EnhancerProxy;
+import org.openjpa.ide.idea.integration.EnhancerSupport;
+
 import java.io.DataInput;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -15,20 +36,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.intellij.openapi.application.Application;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.compiler.*;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiClass;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.openjpa.ide.idea.integration.EnhancerProxy;
-import org.openjpa.ide.idea.integration.EnhancerSupport;
 
 /**
  * Enhances class files with xml- or annotation based metadata in
@@ -296,7 +303,6 @@ class Computable implements SourceInstrumentingCompiler {
                                 outputDirectory,
                                 metadataFiles,
                                 annotatedClassFiles);
-
                     } catch (ClassNotFoundException ignored) {
                         this.logMessage(ctx,
                                 CompilerMessageCategory.WARNING,

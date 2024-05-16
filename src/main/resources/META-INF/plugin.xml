@@ -1,4 +1,4 @@
-<idea-plugin version="2">
+<idea-plugin>
   <id>OpenJpaIntegration</id>
   <name>OpenJpa Enhancer integration</name>
   <description><![CDATA[
@@ -14,15 +14,20 @@
   <vendor url="https://github.com/machak">m.milicevic</vendor>
   <idea-version since-build="8000"/>
 
-  <application-components>
-    <!-- Add your application components here -->
-  </application-components>
-
   <project-components>
     <component>
       <implementation-class>org.openjpa.ide.idea.ProjectComponent</implementation-class>
     </component>
   </project-components>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <projectConfigurable
+            parentId="tools"
+            displayName="OpenJpaEnhancer"
+            instance="org.openjpa.ide.idea.ProjectConfigurable"
+            id="org.openjpa.ide.idea.ProjectConfigurable"
+            nonDefaultProject="true"/>
+  </extensions>
 
   <actions>
     <action id="ToggleDataOpenJpaEnhancer" class="org.openjpa.ide.idea.ToggleEnableAction" text="OpenJpa Enhancer"
@@ -34,5 +39,4 @@
   <extensionPoints>
     <extensionPoint name="openjpaEnhancerExtension" interface="org.openjpa.ide.idea.integration.EnhancerSupport"/>
   </extensionPoints>
-
 </idea-plugin>
