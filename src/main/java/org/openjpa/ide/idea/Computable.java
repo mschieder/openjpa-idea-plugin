@@ -532,12 +532,12 @@ class Computable implements SourceInstrumentingCompiler {
 
         final Map<Module, List<VirtualMetadataFile>> metadataFiles = new LinkedHashMap<Module, List<VirtualMetadataFile>>();
 
-        final Module[] affectedModules = projectCompileScope.getAffectedModules();
 
         final Application application = ApplicationManager.getApplication();
         application.runReadAction(new Runnable() {
             @Override
             public void run() {
+                final Module[] affectedModules = projectCompileScope.getAffectedModules();
                 if (affectedModules.length > 0) {
                     //final IdeaProjectUtils.NoDirectoryErrorHandler errorHandler = new Computable.NoDirectoryErrorHandler(this.ctx);
 
@@ -603,16 +603,19 @@ class Computable implements SourceInstrumentingCompiler {
 
         // combine affected module lists (preserving order)
         final CompileScope compileScope = ctx.getCompileScope();
-        final Module[] cSAffectedModules = compileScope.getAffectedModules();
-        if (cSAffectedModules.length > 0) {
-            for (final Module cSAffectedModule : cSAffectedModules) {
-                if (moduleBasedMetadataFiles.containsKey(cSAffectedModule) || moduleBasedAnnotatedClasses.containsKey(cSAffectedModule)) {
+        final Module[] cSAffectedModules =  ApplicationManager.getApplication()
+                .runReadAction((com.intellij.openapi.util.Computable<Module[]>) compileScope::getAffectedModules);
+            if (cSAffectedModules.length > 0) {
+                for (final Module cSAffectedModule : cSAffectedModules) {
+                    if (moduleBasedMetadataFiles.containsKey(cSAffectedModule) || moduleBasedAnnotatedClasses.containsKey(cSAffectedModule)) {
 
-                    affectedModules.add(cSAffectedModule);
+                        affectedModules.add(cSAffectedModule);
+                    }
                 }
             }
-        }
-        return affectedModules;
+            return affectedModules;
+
+
     }
 
     @SuppressWarnings("MagicCharacter")

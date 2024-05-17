@@ -13,20 +13,13 @@ public class ToggleEnableAction extends ToggleAction {
 
     @Override
     public boolean isSelected(final AnActionEvent anActionEvent) {
-        final ProjectComponent openJpaProjectComponent = getOpenJpaEnhancerComponent(anActionEvent);
-        var state = PersistentState.getInstance(anActionEvent.getProject());
-        final PersistentState openJpaProjectComponentState = openJpaProjectComponent == null ? null : state;
-        return openJpaProjectComponentState != null && openJpaProjectComponentState.isEnhancerEnabled();
+        var state = State.getInstance(anActionEvent.getProject());
+        return state.isEnhancerEnabled();
     }
 
     @Override
     public void setSelected(final AnActionEvent anActionEvent, final boolean b) {
-        PersistentState.getInstance(anActionEvent.getProject()).setEnhancerEnabled(b);
-    }
-
-    private static ProjectComponent getOpenJpaEnhancerComponent(final AnActionEvent anActionEvent) {
-        final Project project = getProject(anActionEvent);
-        return project.getComponent(ProjectComponent.class);
+        State.getInstance(anActionEvent.getProject()).setEnhancerEnabled(b);
     }
 
     private static Project getProject(final AnActionEvent anActionEvent) {

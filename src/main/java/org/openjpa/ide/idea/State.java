@@ -4,16 +4,23 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.intellij.openapi.components.Service;
+import com.intellij.openapi.project.Project;
 import org.openjpa.ide.idea.integration.EnhancerSupport;
 
-public class State {
+@Service(Service.Level.PROJECT)
+public final class State {
 
     private final EnhancerSupportRegistry enhancerSupportRegistry = EnhancerSupportRegistryDefault.getInstance();
 
     private final PersistentState persistentState;
 
-    public State(PersistentState persistentState) {
-        this.persistentState = persistentState;
+    static State getInstance(Project project) {
+        return project.getService(State.class);
+    }
+
+    public State(Project project) {
+        this.persistentState = project.getService(PersistentState.class);
     }
 
     public boolean isEnhancerEnabled() {

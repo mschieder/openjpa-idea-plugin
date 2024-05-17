@@ -31,7 +31,7 @@ final class ProjectConfigurable implements Configurable {
     private ConfigForm configGuiForm = null;
     private final Project project;
     private final State state;
-    private final ProjectComponent projectComponent;
+    private final EnhancerService enhancerService;
 
     private static final String RESOURCE_PATTERN_PREFIX = "?*.";
 
@@ -43,8 +43,8 @@ final class ProjectConfigurable implements Configurable {
 
     public ProjectConfigurable(Project project){
         this.project = project;
-        this.projectComponent = project.getComponent(ProjectComponent.class);
-        this.state = projectComponent.getState();
+        this.enhancerService = EnhancerService.getInstance(project);
+        this.state = State.getInstance(project);
 
     }
 
@@ -124,7 +124,7 @@ final class ProjectConfigurable implements Configurable {
         final boolean addDefaultConstructor = this.state.isAddDefaultConstructor();
         final boolean enforcePropertyRestrictions = this.state.isEnforcePropertyRestrictions();
         final boolean tmpClassLoader = this.state.isTmpClassLoader();
-        final boolean enhancerInitialized = projectComponent.isEnhancerInitialized();
+        final boolean enhancerInitialized = enhancerService.isEnhancerInitialized();
         final PersistenceApi api = this.state.getApi();
         final EnhancerSupport enhancerSupport = this.state.getEnhancerSupport();
         List<AffectedModule> affectedModules;
@@ -284,13 +284,13 @@ final class ProjectConfigurable implements Configurable {
 
     private List<MetaDataOrClassFile> createMetadataFilesGuiModel() {
        final Map<Module, List<VirtualMetadataFile>> metaDataFiles =
-                this.projectComponent.getMetadataFiles();
+                this.enhancerService.getMetadataFiles();
         return createFilesGuiModel(metaDataFiles);
     }
 
     private List<MetaDataOrClassFile> createAnnotatedClassFilesGuiModel() {
         final Map<Module, List<VirtualMetadataFile>> annotatedClassFiles =
-                this.projectComponent.getAnnotatedClassFiles();
+                this.enhancerService.getAnnotatedClassFiles();
         return createFilesGuiModel(annotatedClassFiles);
     }
 

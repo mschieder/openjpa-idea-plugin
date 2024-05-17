@@ -10,7 +10,6 @@ import com.intellij.openapi.module.Module;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.openjpa.ide.idea.PersistenceApi;
-import org.openjpa.ide.idea.ProjectComponent;
 
 /**
  * Interface to implement for every new enhancer to support.<br/>
@@ -18,7 +17,7 @@ import org.openjpa.ide.idea.ProjectComponent;
  */
 public interface EnhancerSupport {
 
-    ExtensionPointName<EnhancerSupport> EXTENSION_POINT_NAME = ExtensionPointName.create("OpenJpaIntegration.openjpaEnhancerExtension");
+    ExtensionPointName<EnhancerSupport> EP_NAME = ExtensionPointName.create("OpenJpaIntegration.openjpaEnhancerExtension");
 
     /**
      * The name to display in the configuration dialog enhancer support drop-down.

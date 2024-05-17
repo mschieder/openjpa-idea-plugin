@@ -12,13 +12,11 @@
         </p>
     ]]></change-notes>
   <vendor url="https://github.com/machak">m.milicevic</vendor>
-  <idea-version since-build="8000"/>
+  <idea-version since-build="232.10227.8"/>
 
-  <project-components>
-    <component>
-      <implementation-class>org.openjpa.ide.idea.ProjectComponent</implementation-class>
-    </component>
-  </project-components>
+  <extensions defaultExtensionNs="com.intellij">
+    <postStartupActivity implementation="org.openjpa.ide.idea.EnhancerProjectStartupActivity"/>
+  </extensions>
 
   <extensions defaultExtensionNs="com.intellij">
     <projectConfigurable
@@ -27,6 +25,11 @@
             instance="org.openjpa.ide.idea.ProjectConfigurable"
             id="org.openjpa.ide.idea.ProjectConfigurable"
             nonDefaultProject="true"/>
+  </extensions>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <compiler.task execute="AFTER"
+                   implementation="org.openjpa.ide.idea.EnhancerCompileTask"/>
   </extensions>
 
   <actions>
