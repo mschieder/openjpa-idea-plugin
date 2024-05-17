@@ -15,9 +15,10 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.roots.*;
 import com.intellij.openapi.roots.libraries.Library;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.util.PathsList;
+
 import com.intellij.util.Processor;
 import com.intellij.util.lang.UrlClassLoader;
+import org.openjpa.ide.idea.State;
 
 /**
  * Factory for creating ClassLoaders restricted to each provided module's dependency scope.
@@ -47,13 +48,15 @@ public abstract class ClassLoaderFactory {
         final UrlClassLoader loader = (UrlClassLoader) (proxyClass == null ? ClassLoaderFactory.class.getClassLoader() : proxyClass.getClassLoader());
         urls.addAll(loader.getUrls());
 
-        final VirtualFile vf1 = compileContext.getModuleOutputDirectory(module);
-        final File file = new File(vf1.getPath());
-        final File canonicalFile = file.getCanonicalFile();
-        final URI uri1 = canonicalFile.toURI();
-        final URL url1 = uri1.toURL();
-        urls.add(url1);
+        final var moduleOutputDirectory = compileContext.getModuleOutputDirectory(module);
+        if (moduleOutputDirectory != null) {
+            urls.add(toUrl(moduleOutputDirectory));
+        }
 
+        final var moduleOutputDirectoryForTests = compileContext.getModuleOutputDirectoryForTests(module);
+        if (moduleOutputDirectoryForTests != null && State.getInstance(compileContext.getProject()).isIncludeTestClasses()){
+            urls.add(toUrl(moduleOutputDirectoryForTests));
+        }
 
         final List<VirtualFile> jars = new ArrayList();
 
@@ -80,4 +83,10 @@ public abstract class ClassLoaderFactory {
         return new URLClassLoader(urls.toArray(new URL[urls.size()]));
     }
 
+    private static URL toUrl(VirtualFile vf) throws IOException{
+        final File file = new File(vf.getPath());
+        final File canonicalFile = file.getCanonicalFile();
+        final URI uri = canonicalFile.toURI();
+        return uri.toURL();
+    }
 }

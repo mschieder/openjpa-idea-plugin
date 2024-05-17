@@ -15,7 +15,7 @@ public final class State {
 
     private final PersistentState persistentState;
 
-    static State getInstance(Project project) {
+    public static State getInstance(Project project) {
         return project.getService(State.class);
     }
 
