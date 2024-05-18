@@ -1,11 +1,14 @@
 package org.openjpa.ide.idea.config;
 
+import java.io.Serial;
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  */
 public class AffectedModule implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private boolean enabled;
@@ -43,11 +46,7 @@ public class AffectedModule implements Serializable {
         if (this.enabled != that.enabled) {
             return false;
         }
-        if (this.name != null ? !this.name.equals(that.name) : that.name != null) {
-            return false;
-        }
-
-        return true;
+        return Objects.equals(this.name, that.name);
     }
 
     @Override

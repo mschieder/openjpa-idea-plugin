@@ -18,7 +18,7 @@ class EnhancerSupportRegistryDefault implements EnhancerSupportRegistry {
 
     public static final EnhancerSupport DEFAULT_ENHANCER_SUPPORT = new EnhancerSupportOpenJpa();
 
-    private final Map<String, EnhancerSupport> supported = new HashMap<String, EnhancerSupport>();
+    private final Map<String, EnhancerSupport> supported = new HashMap<>();
 
     public static EnhancerSupportRegistry getInstance() {
         return instance;
@@ -47,7 +47,7 @@ class EnhancerSupportRegistryDefault implements EnhancerSupportRegistry {
     @Override
     @NotNull
     public Set<EnhancerSupport> getSupportedEnhancers() {
-        return new LinkedHashSet<EnhancerSupport>(this.supported.values());
+        return new LinkedHashSet<>(this.supported.values());
     }
 
     @Override
@@ -57,7 +57,7 @@ class EnhancerSupportRegistryDefault implements EnhancerSupportRegistry {
     }
 
     @Override
-    public void unRegisterEnhanderSupport(@NotNull final EnhancerSupport enhancerSupport) {
+    public void unRegisterEnhancerSupport(@NotNull final EnhancerSupport enhancerSupport) {
         final String id = enhancerSupport.getId();
         this.supported.remove(id);
     }

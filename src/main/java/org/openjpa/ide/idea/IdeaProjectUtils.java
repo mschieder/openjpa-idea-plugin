@@ -10,7 +10,6 @@ import com.intellij.openapi.compiler.CompileScope;
 import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
@@ -48,20 +47,18 @@ final class IdeaProjectUtils {
         final CompilerManager compilerManager = CompilerManager.getInstance(project);
         final CompileScope projectCompileScope = compilerManager.createProjectCompileScope(project);
         final Module[] compileScopeAffectedModules = projectCompileScope.getAffectedModules();
-        final List<Module> affectedModules = new ArrayList<Module>(compileScopeAffectedModules.length);
+        final List<Module> affectedModules = new ArrayList<>(compileScopeAffectedModules.length);
 
         //
         // find enhancer class in module dependencies
-        if (compileScopeAffectedModules.length > 0) {
-            for (final Module affectedModule : compileScopeAffectedModules) {
+        for (final Module affectedModule : compileScopeAffectedModules) {
 
-                // query for enhancer class
-                final Query<PsiClass> psiClassQuery = createEnhancerClassQuery(enhancerSupport, affectedModule);
+            // query for enhancer class
+            final Query<PsiClass> psiClassQuery = createEnhancerClassQuery(enhancerSupport, affectedModule);
 
-                // query returns results? -> enhancer present
-                if (psiClassQuery.findFirst() != null) {
-                    affectedModules.add(affectedModule);
-                }
+            // query returns results? -> enhancer present
+            if (psiClassQuery.findFirst() != null) {
+                affectedModules.add(affectedModule);
             }
         }
         return affectedModules;
@@ -77,7 +74,7 @@ final class IdeaProjectUtils {
     static List<VirtualFile> findFilesByExtension(final VirtualFile rootDir,
                                                   final String extension) {
 
-        final List<VirtualFile> children = new LinkedList<VirtualFile>();
+        final List<VirtualFile> children = new LinkedList<>();
 
         // simply iterate directory for finding files
         for (final VirtualFile entry : rootDir.getChildren()) {
@@ -104,7 +101,7 @@ final class IdeaProjectUtils {
      * @return List of virtual classes annotated with corresponding annotations
      */
     static List<PsiClass> findPersistenceAnnotatedClasses(final EnhancerSupport enhancerSupport, final Module module) {
-        final List<PsiClass> annotatedClasses = new ArrayList<PsiClass>();
+        final List<PsiClass> annotatedClasses = new ArrayList<>();
 
         for (final String annotationName : enhancerSupport.getAnnotationNames()) {
             final Collection<PsiClass> psiClasses = findAnnotatedClasses(module, annotationName);
@@ -182,25 +179,22 @@ final class IdeaProjectUtils {
      */
     private static Query<PsiClass> createEnhancerClassQuery(final EnhancerSupport enhancerSupport,
                                                             final Module module) {
-        return AllClassesSearch.search(module.getModuleWithLibrariesScope(), module.getProject(), new Condition<String>() {
-            @SuppressWarnings("ConstantConditions") // inspection going wrong as 'equals' variable changes during loop
-            @Override
-            public boolean value(final String s) {
-                final String[] enhancerClassNames = enhancerSupport.getEnhancerClassNames();
-                boolean equals = false;
+        // inspection going wrong as 'equals' variable changes during loop
+        return AllClassesSearch.search(module.getModuleWithLibrariesScope(), module.getProject(), s -> {
+            final String[] enhancerClassNames = enhancerSupport.getEnhancerClassNames();
+            boolean equals = false;
 
-                if (s != null) {
+            if (s != null) {
 
-                    for (final String enhancerClassName : enhancerClassNames) {
-                        equals = equals || s.equals(enhancerClassName);
-                        if (equals) {
-                            break;
-                        }
+                for (final String enhancerClassName : enhancerClassNames) {
+                    equals = s.equals(enhancerClassName);
+                    if (equals) {
+                        break;
                     }
                 }
-
-                return equals;
             }
+
+            return equals;
         });
     }
 

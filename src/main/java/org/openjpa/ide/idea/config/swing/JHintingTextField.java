@@ -127,7 +127,7 @@ public class JHintingTextField extends JTextField {
             public void paint(final Graphics g, final int p0, final int p1, final Shape bounds, final JTextComponent c) {
 
                 final String hint = (String) c.getClientProperty("emptyTextHint");
-                if (hint == null || hint.length() == 0 || c.getDocument().getLength() != 0) {
+                if (hint == null || hint.isEmpty() || c.getDocument().getLength() != 0) {
                     return;
                 }
                 this.label.setText(hint);
@@ -145,7 +145,6 @@ public class JHintingTextField extends JTextField {
                 final int prWidth = pref.width;
                 final int w = Math.min(c.getWidth() - ins.left - ins.right, prWidth);
                 final int h = Math.min(c.getWidth() - ins.top - ins.bottom, prHeight);
-                //final int x = ltr ? c.getWidth() - ins.right - w : ins.left;
                 final int x = 0; // put left
                 final int parentHeight = c.getHeight() - ins.top - ins.bottom;
                 final int y = ins.top + (parentHeight - h) / 2;

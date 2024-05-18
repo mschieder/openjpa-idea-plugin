@@ -69,7 +69,7 @@ final class MetadataParser {
 
         final Document doc = createDocumentBuilderFactory(xml);
 
-        final Set<String> qualifiedClassNames = new LinkedHashSet<String>();
+        final Set<String> qualifiedClassNames = new LinkedHashSet<>();
 
         //
         // parse metadata files (intentionally kept simple - no patterns)
@@ -95,7 +95,7 @@ final class MetadataParser {
     private static Set<String> parseQualifiedClassNamesJdo(final Document doc)
             throws XPathExpressionException {
 
-        final Set<String> jpaClassNames = new LinkedHashSet<String>();
+        final Set<String> jpaClassNames = new LinkedHashSet<>();
 
         for (final String jdoMetadataRootNode : JDO_METADATA_ROOT_NODES) {
             final Set<String> classNames = parseQualifiedClassNamesJdoInternal(doc, jdoMetadataRootNode);
@@ -117,7 +117,7 @@ final class MetadataParser {
 
         final NodeList packageNodes = (NodeList) expr1.evaluate(doc, XPathConstants.NODESET);
 
-        final Set<String> packageAndClasses = new LinkedHashSet<String>();
+        final Set<String> packageAndClasses = new LinkedHashSet<>();
         for (int i = 0; i < packageNodes.getLength(); ++i) {
             final Node packageNode = packageNodes.item(i);
             final String packageName = packageNode.getNodeValue();
@@ -141,7 +141,7 @@ final class MetadataParser {
     private static Set<String> parseQualifiedClassNamesJpa(final Document doc)
             throws XPathExpressionException {
 
-        final Set<String> jpaClassNames = new LinkedHashSet<String>();
+        final Set<String> jpaClassNames = new LinkedHashSet<>();
 
         for (final String jpaMetadataRootNode : JPA_METADATA_ROOT_NODES) {
             final Set<String> classNames = parseQualifiedClassNamesJpaInternal(doc, jpaMetadataRootNode);
@@ -162,7 +162,7 @@ final class MetadataParser {
 
         final NodeList classNodes = (NodeList) expr1.evaluate(doc, XPathConstants.NODESET);
 
-        final Set<String> packageAndClasses = new LinkedHashSet<String>();
+        final Set<String> packageAndClasses = new LinkedHashSet<>();
         for (int i = 0; i < classNodes.getLength(); ++i) {
             final Node classNodeItem = classNodes.item(i);
             final String className = classNodeItem.getNodeValue();

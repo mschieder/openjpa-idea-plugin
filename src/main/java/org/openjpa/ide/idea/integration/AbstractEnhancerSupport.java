@@ -26,7 +26,7 @@ public abstract class AbstractEnhancerSupport implements EnhancerSupport {
     @Override
     @NotNull
     public List<String> getAnnotationNames() {
-        final List<String> annotationNames = new ArrayList<String>(5);
+        final List<String> annotationNames = new ArrayList<>(5);
 
         for (final PersistenceApi persistenceApi : this.getPersistenceApis()) {
             annotationNames.addAll(Arrays.asList(persistenceApi.getAnnotationClassNames()));
@@ -54,7 +54,7 @@ public abstract class AbstractEnhancerSupport implements EnhancerSupport {
 
         final Class<?> enhancerProxyClass = this.getEnhancerProxyClass();
         final Constructor<?> constructor = enhancerProxyClass
-                .getConstructor(new Class[]{PersistenceApi.class, CompileContext.class, Module.class, String.class});
+                .getConstructor(PersistenceApi.class, CompileContext.class, Module.class, String.class);
 
         return (EnhancerProxy) constructor.newInstance(api, compileCtx, module, persistenceUnitName);
     }

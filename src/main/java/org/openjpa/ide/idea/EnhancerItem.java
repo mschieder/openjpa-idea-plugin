@@ -1,6 +1,6 @@
 package org.openjpa.ide.idea;
 
-import com.intellij.openapi.compiler.FileProcessingCompiler;
+import com.intellij.openapi.compiler.FileProcessingCompiler.ProcessingItem;
 import com.intellij.openapi.compiler.TimestampValidityState;
 import com.intellij.openapi.compiler.ValidityState;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
  * <p/>
  * TODO: seems hacky, do a complete review and cleanup
  */
-class EnhancerItem implements FileProcessingCompiler.ProcessingItem {
+class EnhancerItem implements ProcessingItem {
 
     private final VirtualMetadataFile virtualMetadata;
 

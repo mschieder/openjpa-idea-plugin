@@ -11,18 +11,18 @@ import org.openjpa.ide.idea.integration.EnhancerSupport;
 public interface EnhancerSupportRegistry {
 
     @NotNull
-    public EnhancerSupport getEnhancerSupportById(@NotNull String id);
+    EnhancerSupport getEnhancerSupportById(@NotNull String id);
 
-    public boolean isRegistered(@NotNull String id);
-
-    @NotNull
-    public EnhancerSupport getDefaultEnhancerSupport();
+    boolean isRegistered(@NotNull String id);
 
     @NotNull
-    public Set<EnhancerSupport> getSupportedEnhancers();
+    EnhancerSupport getDefaultEnhancerSupport();
 
-    public void registerEnhancerSupport(@NotNull EnhancerSupport enhancerSupport);
+    @NotNull
+    Set<EnhancerSupport> getSupportedEnhancers();
 
-    public void unRegisterEnhanderSupport(@NotNull EnhancerSupport enhancerSupport);
+    void registerEnhancerSupport(@NotNull EnhancerSupport enhancerSupport);
+
+    void unRegisterEnhancerSupport(@NotNull EnhancerSupport enhancerSupport);
 
 }

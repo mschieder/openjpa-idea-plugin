@@ -27,12 +27,12 @@ public final class EnhancerService {
     }
 
     Map<Module, List<VirtualMetadataFile>> getAnnotatedClassFiles() {
-        return this.dNEComputable == null ? new LinkedHashMap<Module, List<VirtualMetadataFile>>()
+        return this.dNEComputable == null ? new LinkedHashMap<>()
                 : this.dNEComputable.getAnnotatedClassFiles(null);
     }
 
     Map<Module, List<VirtualMetadataFile>> getMetadataFiles() {
-        return this.dNEComputable == null ? new LinkedHashMap<Module, List<VirtualMetadataFile>>()
+        return this.dNEComputable == null ? new LinkedHashMap<>()
                 : this.dNEComputable.getMetadataFiles(null);
     }
 

@@ -7,7 +7,6 @@ import com.intellij.openapi.compiler.CompileScope;
 import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.compiler.CompilerPaths;
-import com.intellij.openapi.compiler.FileProcessingCompiler;
 import com.intellij.openapi.compiler.SourceInstrumentingCompiler;
 import com.intellij.openapi.compiler.TimestampValidityState;
 import com.intellij.openapi.compiler.ValidityState;
@@ -52,8 +51,8 @@ import java.util.Set;
  */
 class Computable implements SourceInstrumentingCompiler {
 
-    private static final FileProcessingCompiler.ProcessingItem[] EMPTY_PROCESSING_ITEMS = new FileProcessingCompiler.ProcessingItem[0];
-
+    private static final ProcessingItem[] EMPTY_PROCESSING_ITEMS = new ProcessingItem[0];
+    private static final String CLASSFILE_EXTENSION = ".class";
     //
     // Members
     //
@@ -83,50 +82,29 @@ class Computable implements SourceInstrumentingCompiler {
 
     @NotNull
     @Override
-    public FileProcessingCompiler.ProcessingItem[] getProcessingItems(final CompileContext compileContext) {
+    public ProcessingItem[] getProcessingItems(final @NotNull CompileContext compileContext) {
         final Set<String> enabledModules = this.state.getEnabledModules();
-        if (this.state.isEnhancerEnabled() && enabledModules != null && !enabledModules.isEmpty()) {
+        if (this.state.isEnhancerEnabled() && !enabledModules.isEmpty()) {
             // get metadata files of affected modules
             final Map<Module, List<VirtualMetadataFile>> moduleBasedMetadataFiles =
                     this.getMetadataFiles(compileContext.getCompileScope());
-            /*
-                //Commented out: debug output of found metadata files and according modules
-                for (final Module module : moduleBasedMetadataFiles.keySet()) {
-                    ctx.addMessage(CompilerMessageCategory.WARNING, "+++ list1 module: " + module.getName(), null, -1, -1);
-                    for (final VirtualFile vf : moduleBasedMetadataFiles.get(module)) {
-                        ctx.addMessage(CompilerMessageCategory.WARNING, "----- list1 file: " + vf.getPath(), null, -1, -1);
-                    }
-                }
-            */
 
             // get annotated class files of affected modules
             final Map<Module, List<VirtualMetadataFile>> moduleBasedAnnotatedClasses =
                     this.getAnnotatedClassFiles(compileContext.getCompileScope());
-            /*
-                //Commented out: debug output of found annotated class files and according modules
-            for (final Module module : moduleBasedAnnotatedClasses.keySet()) {
-                ctx.addMessage(CompilerMessageCategory.WARNING, "+++ list2 module: " + module.getName(), null, -1, -1);
-                for (final VirtualFile vf : moduleBasedAnnotatedClasses.get(module)) {
-                    ctx.addMessage(CompilerMessageCategory.WARNING, "----- list2 file: " + vf.getPath(), null, -1, -1);
-                }
-            }*/
 
-            final Collection<FileProcessingCompiler.ProcessingItem> processingItems =
-                    new LinkedHashSet<FileProcessingCompiler.ProcessingItem>();
+            final Collection<ProcessingItem> processingItems =
+                    new LinkedHashSet<>();
             for (final List<VirtualMetadataFile> metadataFileList : moduleBasedMetadataFiles.values()) {
                 for (final VirtualMetadataFile virtualMetadataFile : metadataFileList) {
                     final Collection<EnhancerItem> enhancerItems = virtualMetadataFile.toEnhancerItems();
-                    for (final EnhancerItem enhancerItem : enhancerItems) {
-                        processingItems.add(enhancerItem);
-                    }
+                    processingItems.addAll(enhancerItems);
                 }
             }
             for (final List<VirtualMetadataFile> annotatedClassesFileList : moduleBasedAnnotatedClasses.values()) {
                 for (final VirtualMetadataFile virtualMetadataFile : annotatedClassesFileList) {
                     final Collection<EnhancerItem> enhancerItems = virtualMetadataFile.toEnhancerItems();
-                    for (final EnhancerItem enhancerItem : enhancerItems) {
-                        processingItems.add(enhancerItem);
-                    }
+                    processingItems.addAll(enhancerItems);
                 }
             }
 
@@ -136,24 +114,22 @@ class Computable implements SourceInstrumentingCompiler {
                         "Enhancer: no metadata- or annotated class-files found");
             }
 
-            return processingItems.toArray(new FileProcessingCompiler.ProcessingItem[processingItems.size()]);
+            return processingItems.toArray(new ProcessingItem[0]);
         } else {
             return EMPTY_PROCESSING_ITEMS;
         }
     }
 
     @Override
-    public FileProcessingCompiler.ProcessingItem[] process(final CompileContext ctx,
-                                                           final FileProcessingCompiler.ProcessingItem[] processingItems) {
+    public ProcessingItem[] process(final @NotNull CompileContext ctx,
+                                    final ProcessingItem @NotNull [] processingItems) {
 
         org.apache.log4j.BasicConfigurator.configure();
-        FileProcessingCompiler.ProcessingItem[] ret = EMPTY_PROCESSING_ITEMS;
+        ProcessingItem[] ret = EMPTY_PROCESSING_ITEMS;
 
         // shortcut if disabled
         final Set<String> enabledModules = this.state.getEnabledModules();
-        if (!this.state.isEnhancerEnabled() || enabledModules == null || enabledModules.isEmpty()) {
-
-        } else {
+        if (this.state.isEnhancerEnabled() && !enabledModules.isEmpty()) {
 
             // just to be sure: backup of classloader
             final ClassLoader previousCL = Thread.currentThread().getContextClassLoader();
@@ -167,28 +143,20 @@ class Computable implements SourceInstrumentingCompiler {
                 progressIndicator.setText("OpenJpa Enhancer running");
 
                 final LinkedHashMap<Module, List<VirtualMetadataFile>> moduleBasedMetadataFiles =
-                        new LinkedHashMap<Module, List<VirtualMetadataFile>>();
+                        new LinkedHashMap<>();
 
                 final LinkedHashMap<Module, List<VirtualMetadataFile>> moduleBasedAnnotatedClasses =
-                        new LinkedHashMap<Module, List<VirtualMetadataFile>>();
+                        new LinkedHashMap<>();
 
-                for (final FileProcessingCompiler.ProcessingItem processingItem : processingItems) {
+                for (final ProcessingItem processingItem : processingItems) {
                     final EnhancerItem enhancerItem = (EnhancerItem) processingItem;
                     final VirtualMetadataFile virtualMetadata = enhancerItem.getVirtualMetadata();
                     final Module module = virtualMetadata.getModule();
                     if (virtualMetadata.isAnnotationBasedOnly()) {
-                        List<VirtualMetadataFile> annotatedClassesList = moduleBasedAnnotatedClasses.get(module);
-                        if (annotatedClassesList == null) {
-                            annotatedClassesList = new ArrayList<VirtualMetadataFile>();
-                            moduleBasedAnnotatedClasses.put(module, annotatedClassesList);
-                        }
+                        List<VirtualMetadataFile> annotatedClassesList = moduleBasedAnnotatedClasses.computeIfAbsent(module, k -> new ArrayList<>());
                         annotatedClassesList.add(virtualMetadata);
                     } else {
-                        List<VirtualMetadataFile> metadataFileList = moduleBasedMetadataFiles.get(module);
-                        if (metadataFileList == null) {
-                            metadataFileList = new ArrayList<VirtualMetadataFile>();
-                            moduleBasedMetadataFiles.put(module, metadataFileList);
-                        }
+                        List<VirtualMetadataFile> metadataFileList = moduleBasedMetadataFiles.computeIfAbsent(module, k -> new ArrayList<>());
                         if (!metadataFileList.contains(virtualMetadata)) {
                             metadataFileList.add(virtualMetadata);
                         }
@@ -216,13 +184,13 @@ class Computable implements SourceInstrumentingCompiler {
 
                 ret = processingItems;
 
-            } catch (Throwable t) {
+            } catch (Exception e) {
                 // writer for stacktrace printing
                 final Writer writer = new StringWriter();
                 // transform stacktrace to string
                 final PrintWriter printWriter = new PrintWriter(writer);
                 try {
-                    t.printStackTrace(printWriter);
+                    e.printStackTrace(printWriter);
                 } finally {
                     printWriter.close();
                 }
@@ -264,14 +232,14 @@ class Computable implements SourceInstrumentingCompiler {
                                  final Iterable<Module> affectedModules,
                                  final LinkedHashMap<Module, List<VirtualMetadataFile>> moduleBasedMetadataFiles,
                                  final LinkedHashMap<Module, List<VirtualMetadataFile>> moduleBasedAnnotatedClasses)
-            throws IOException, IllegalAccessException,
+            throws IllegalAccessException,
             InstantiationException, InvocationTargetException, NoSuchFieldException {
 
         int count = 0;
         for (final Module module : affectedModules) {
             // exclude disabled modules
             final Set<String> enabledModules = this.state.getEnabledModules();
-            if (enabledModules != null && enabledModules.contains(module.getName())) {
+            if (enabledModules.contains(module.getName())) {
 
                 // get modules output folder
                 final VirtualFile outputDirectory = ctx.getModuleOutputDirectory(module);
@@ -351,26 +319,24 @@ class Computable implements SourceInstrumentingCompiler {
         final EnhancerProxy enhancer;
         if (doEnhance) {
 
-            //final JDOEnhancer enhancer = JDOHelper.getEnhancer(); // does not work due to classloader problems
-            //enhancer = new OpenJpaEnhancerProxy(api, compileContext, module);
             enhancer = enhancerSupport.newEnhancerProxy(state.getApi(), compileContext, module, null);
             enhancer.setAddDefaultConstructor(state.isAddDefaultConstructor());
             enhancer.setEnforcePropertyRestrictions(state.isEnforcePropertyRestrictions());
 
         } else {
-            enhancer = null;
+            // nothing to enhance
+            return 0;
         }
 
         //
         // add metadata and classes
 
         // add metadata based classes to enhancer list
-        if (doEnhance && metadataBased) {
+        if (metadataBased) {
 
             // iterate modules and enhance classes in corresponding output folders
             for (final VirtualMetadataFile metadataFile : metadataFiles) {
 
-                //ctx.addMessage(CompilerMessageCategory.INFORMATION, "OpenJpa Enhancer: found metadata file: " + metadataFile.getPath(), null, -1, -1);
                 // get metadata file url
                 final VirtualFile metadataVirtualFile = metadataFile.getFile();
                 final String metadataFilePath = metadataVirtualFile.getPath();
@@ -383,20 +349,17 @@ class Computable implements SourceInstrumentingCompiler {
                 // add xml metadata based classes
                 for (final String className : classNames) {
                     final String classNameAsPath = IdeaProjectUtils.packageToPath(className);
-                    final String fullPath = outputDirectory.getPath() + '/' + classNameAsPath + ".class";
+                    final String fullPath = outputDirectory.getPath() + '/' + classNameAsPath + CLASSFILE_EXTENSION;
 
-                    //ctx.addMessage(CompilerMessageCategory.INFORMATION, "OpenJpa Enhancer: found class: " + fullPath, null, -1, -1);
                     enhancer.addClasses(fullPath);
                 }
             }
         }
 
         // add annotated classes to enhancer list
-        if (doEnhance && annotationBased) {
+        if (annotationBased) {
 
             for (final VirtualMetadataFile annotatedClassFile : annotatedClassFiles) {
-                //compileContext.addMessage(CompilerMessageCategory.INFORMATION,
-                //                          "OpenJpa Enhancer: found class: " + annotatedClassFile.getPath(), null, -1, -1);
                 final VirtualFile annotatedClassVirtualFile = annotatedClassFile.getFile();
                 enhancer.addClasses(annotatedClassVirtualFile.getPath());
             }
@@ -408,13 +371,8 @@ class Computable implements SourceInstrumentingCompiler {
         // count nr of enhanced classes
         final int enhancedCount;
 
-        if (doEnhance) {
-            // finally enhance all found classes in module
-            enhancedCount = enhancer.enhance();
-        } else {
-            // nothing to enhance
-            enhancedCount = 0;
-        }
+        // finally enhance all found classes in module
+        enhancedCount = enhancer.enhance();
 
         return enhancedCount;
     }
@@ -432,75 +390,62 @@ class Computable implements SourceInstrumentingCompiler {
     // TODO: cleanup, as this seems to be very hacky
     @SuppressWarnings("FeatureEnvy")
     Map<Module, List<VirtualMetadataFile>> getAnnotatedClassFiles(@Nullable final CompileScope compileScope) {
-        final LinkedHashMap<Module, List<VirtualMetadataFile>> moduleBasedFiles = new LinkedHashMap<Module, List<VirtualMetadataFile>>();
+        final LinkedHashMap<Module, List<VirtualMetadataFile>> moduleBasedFiles = new LinkedHashMap<>();
 
         final Application application = ApplicationManager.getApplication();
-        application.runReadAction(new Runnable() {
+        application.runReadAction(() -> {
+            final CompileScope projectCompileScope = compileScope == null
+                    ? CompilerManager.getInstance(Computable.this.project).createProjectCompileScope(Computable.this.project)
+                    : compileScope;
 
-            @Override
-            public void run() {
-                final CompileScope projectCompileScope = compileScope == null
-                        ? CompilerManager.getInstance(Computable.this.project).createProjectCompileScope(Computable.this.project)
-                        : compileScope;
+            final Set<String> enabledFiles = Computable.this.state.getEnabledFiles();
 
-                final Set<String> enabledFiles = Computable.this.state.getEnabledFiles();
-                int size = enabledFiles.size();
+            for (final Module module : projectCompileScope.getAffectedModules()) {
+                if (Computable.this.state.getEnabledModules().contains(module.getName())) {
 
-                for (final Module module : projectCompileScope.getAffectedModules()) {
-                    if (Computable.this.state.getEnabledModules() != null && Computable.this.state.getEnabledModules()
-                            .contains(module.getName())) {
+                    final List<PsiClass> annotatedClasses = IdeaProjectUtils.findPersistenceAnnotatedClasses(
+                            Computable.this.state.getEnhancerSupport(), module);
+                    final Collection<VirtualFile> outputDirectories = new ArrayList<>(2);
+                    outputDirectories.add(CompilerPaths.getModuleOutputDirectory(module, false));
+                    if (Computable.this.state.isIncludeTestClasses()) {
+                        outputDirectories.add(CompilerPaths.getModuleOutputDirectory(module, true));
+                    }
 
+                    for (final VirtualFile outputDirectory : outputDirectories) {
+                        // convert to class files in output directory and add to map
+                        if (!annotatedClasses.isEmpty() && outputDirectory != null) {
+                            outputDirectory.refresh(true, true);
+                            final List<VirtualMetadataFile> moduleFiles = new LinkedList<>();
+                            // convert psi classes to class files in output path
+                            for (final PsiClass annotatedClass : annotatedClasses) {
+                                final String pcClassName = annotatedClass.getQualifiedName();
+                                // skip disabled files
 
-                        final List<PsiClass> annotatedClasses = IdeaProjectUtils.findPersistenceAnnotatedClasses(
-                                Computable.this.state.getEnhancerSupport(), module);
-                        final Collection<VirtualFile> outputDirectories = new ArrayList<VirtualFile>(2);
-                        outputDirectories.add(CompilerPaths.getModuleOutputDirectory(module, false));
-                        if (Computable.this.state.isIncludeTestClasses()) {
-                            outputDirectories.add(CompilerPaths.getModuleOutputDirectory(module, true));
-                        }
-                        //int count = 0;
-
-                        for (final VirtualFile outputDirectory : outputDirectories) {
-                            // convert to class files in output directory and add to map
-                            if (!annotatedClasses.isEmpty()) {
-                                if (outputDirectory == null) {
-
-                                } else {
-                                    outputDirectory.refresh(true, true);
-                                    final List<VirtualMetadataFile> moduleFiles = new LinkedList<VirtualMetadataFile>();
-                                    // convert psi classes to class files in output path
-                                    for (final PsiClass annotatedClass : annotatedClasses) {
-                                        final String pcClassName = annotatedClass.getQualifiedName();
-                                        // skip disabled files
-
-                                        if (compileScope != null && !enabledFiles.contains(pcClassName)) {
-                                            continue;
-                                        }
-                                        // convert to path
-                                        final String pcClassPath = IdeaProjectUtils.packageToPath(pcClassName) + ".class";
-                                        // find file in output path
-                                        final VirtualFile pcClassFile = outputDirectory.findFileByRelativePath(pcClassPath);
-                                        if (pcClassFile != null && pcClassFile.exists()) {
-                                            moduleFiles
-                                                    .add(new VirtualMetadataFile(module, true, pcClassFile,
-                                                            Collections.singletonList(pcClassName),
-                                                            Collections.singletonList(pcClassFile)));
-                                        }
-                                    }
-                                    if (!moduleFiles.isEmpty()) {
-                                        @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
-                                        // everything is fine here
-                                        final List<VirtualMetadataFile> storedModuleFiles = moduleBasedFiles.get(module);
-                                        // if collection already exists, just add content
-                                        if (storedModuleFiles == null) {
-                                            moduleBasedFiles.put(module, moduleFiles);
-                                        } else {
-                                            storedModuleFiles.addAll(moduleFiles);
-                                        }
-                                    }
+                                if (pcClassName == null || (compileScope != null && !enabledFiles.contains(pcClassName))) {
+                                    continue;
+                                }
+                                // convert to path
+                                final String pcClassPath = IdeaProjectUtils.packageToPath(pcClassName) + CLASSFILE_EXTENSION;
+                                // find file in output path
+                                final VirtualFile pcClassFile = outputDirectory.findFileByRelativePath(pcClassPath);
+                                if (pcClassFile != null && pcClassFile.exists()) {
+                                    moduleFiles
+                                            .add(new VirtualMetadataFile(module, true, pcClassFile,
+                                                    Collections.singletonList(pcClassName),
+                                                    Collections.singletonList(pcClassFile)));
                                 }
                             }
-                            //++count;
+                            if (!moduleFiles.isEmpty()) {
+                                @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+                                // everything is fine here
+                                final List<VirtualMetadataFile> storedModuleFiles = moduleBasedFiles.get(module);
+                                // if collection already exists, just add content
+                                if (storedModuleFiles == null) {
+                                    moduleBasedFiles.put(module, moduleFiles);
+                                } else {
+                                    storedModuleFiles.addAll(moduleFiles);
+                                }
+                            }
                         }
                     }
                 }
@@ -520,7 +465,7 @@ class Computable implements SourceInstrumentingCompiler {
     @SuppressWarnings("FeatureEnvy")
     Map<Module, List<VirtualMetadataFile>> getMetadataFiles(@Nullable final CompileScope compileScope) {
         final Set<String> extensions;
-        if (this.state.getMetaDataExtensions() == null || this.state.getMetaDataExtensions().isEmpty()) {
+        if (this.state.getMetaDataExtensions().isEmpty()) {
             extensions = Collections.emptySet(); // State.DEFAULT_METADATA_EXTENSIONS; // no extensions provided -> disable search
         } else {
             extensions = this.state.getMetaDataExtensions();
@@ -530,62 +475,54 @@ class Computable implements SourceInstrumentingCompiler {
                 ? CompilerManager.getInstance(this.project).createProjectCompileScope(this.project)
                 : compileScope;
 
-        final Map<Module, List<VirtualMetadataFile>> metadataFiles = new LinkedHashMap<Module, List<VirtualMetadataFile>>();
+        final Map<Module, List<VirtualMetadataFile>> metadataFiles = new LinkedHashMap<>();
 
 
         final Application application = ApplicationManager.getApplication();
-        application.runReadAction(new Runnable() {
-            @Override
-            public void run() {
-                final Module[] affectedModules = projectCompileScope.getAffectedModules();
-                if (affectedModules.length > 0) {
-                    //final IdeaProjectUtils.NoDirectoryErrorHandler errorHandler = new Computable.NoDirectoryErrorHandler(this.ctx);
+        application.runReadAction(() -> {
+            final Module[] affectedModules = projectCompileScope.getAffectedModules();
 
-                    for (final Module module : affectedModules) {
-                        if (Computable.this.state.getEnabledModules() != null && Computable.this.state.getEnabledModules()
-                                .contains(module.getName())) {
+            for (final Module module : affectedModules) {
+                if (Computable.this.state.getEnabledModules()
+                        .contains(module.getName())) {
 
-                            final Collection<VirtualFile> outputDirectories = new ArrayList<VirtualFile>(2);
-                            outputDirectories.add(CompilerPaths.getModuleOutputDirectory(module, false));
-                            if (Computable.this.state.isIncludeTestClasses()) {
-                                outputDirectories.add(CompilerPaths.getModuleOutputDirectory(module, true));
-                            }
-                            //int count = 0;
-                            for (final VirtualFile outputDirectory : outputDirectories) {
+                    final Collection<VirtualFile> outputDirectories = new ArrayList<>(2);
+                    outputDirectories.add(CompilerPaths.getModuleOutputDirectory(module, false));
+                    if (Computable.this.state.isIncludeTestClasses()) {
+                        outputDirectories.add(CompilerPaths.getModuleOutputDirectory(module, true));
+                    }
+                    for (final VirtualFile outputDirectory : outputDirectories) {
 
-                                if (outputDirectory == null) {
-                                } else {
+                        if (outputDirectory != null) {
 
-                                    final List<VirtualMetadataFile> moduleFiles = new LinkedList<VirtualMetadataFile>();
-                                    for (final String extension : extensions) {
-                                        final List<VirtualFile> metadataFilesPerExtension =
-                                                IdeaProjectUtils.findFilesByExtension(outputDirectory, extension);
+                            final List<VirtualMetadataFile> moduleFiles = new LinkedList<>();
+                            for (final String extension : extensions) {
+                                final List<VirtualFile> metadataFilesPerExtension =
+                                        IdeaProjectUtils.findFilesByExtension(outputDirectory, extension);
 
-                                        // remove non-parseable files
-                                        for (final VirtualFile vf : metadataFilesPerExtension) {
-                                            final Set<String> classNames;
-                                            try {
-                                                classNames = MetadataParser.parseQualifiedClassNames(vf);
-                                            } catch (Exception e) {
-                                                throw new IllegalArgumentException("parsing metadata error", e);
-                                            }
-                                            if (classNames != null && !classNames.isEmpty()) {
-                                                final List<VirtualFile> classFiles = new ArrayList<VirtualFile>(classNames.size());
-                                                for (final String className : classNames) {
-                                                    final String classNameAsPath = IdeaProjectUtils.packageToPath(className);
-                                                    final VirtualFile classFile = outputDirectory.findFileByRelativePath(classNameAsPath + ".class");
-                                                    classFiles.add(classFile);
-                                                }
-
-                                                moduleFiles.add(new VirtualMetadataFile(module, false, vf, classNames, classFiles));
-                                            }
-                                        }
+                                // remove non-parseable files
+                                for (final VirtualFile vf : metadataFilesPerExtension) {
+                                    final Set<String> classNames;
+                                    try {
+                                        classNames = MetadataParser.parseQualifiedClassNames(vf);
+                                    } catch (Exception e) {
+                                        throw new IllegalArgumentException("parsing metadata error", e);
                                     }
-                                    if (!moduleFiles.isEmpty()) {
+                                    if (!classNames.isEmpty()) {
+                                        final List<VirtualFile> classFiles = new ArrayList<>(classNames.size());
+                                        for (final String className : classNames) {
+                                            final String classNameAsPath = IdeaProjectUtils.packageToPath(className);
+                                            final VirtualFile classFile = outputDirectory.findFileByRelativePath(classNameAsPath + CLASSFILE_EXTENSION);
+                                            classFiles.add(classFile);
+                                        }
 
-                                        metadataFiles.put(module, moduleFiles);
+                                        moduleFiles.add(new VirtualMetadataFile(module, false, vf, classNames, classFiles));
                                     }
                                 }
+                            }
+                            if (!moduleFiles.isEmpty()) {
+
+                                metadataFiles.put(module, moduleFiles);
                             }
                         }
                     }
@@ -599,21 +536,19 @@ class Computable implements SourceInstrumentingCompiler {
                                            final Map<Module, List<VirtualMetadataFile>> moduleBasedMetadataFiles,
                                            final Map<Module, List<VirtualMetadataFile>> moduleBasedAnnotatedClasses) {
         // list of affected modules
-        final List<Module> affectedModules = new ArrayList<Module>();
+        final List<Module> affectedModules = new ArrayList<>();
 
         // combine affected module lists (preserving order)
         final CompileScope compileScope = ctx.getCompileScope();
-        final Module[] cSAffectedModules =  ApplicationManager.getApplication()
+        final Module[] cSAffectedModules = ApplicationManager.getApplication()
                 .runReadAction((com.intellij.openapi.util.Computable<Module[]>) compileScope::getAffectedModules);
-            if (cSAffectedModules.length > 0) {
-                for (final Module cSAffectedModule : cSAffectedModules) {
-                    if (moduleBasedMetadataFiles.containsKey(cSAffectedModule) || moduleBasedAnnotatedClasses.containsKey(cSAffectedModule)) {
+        for (final Module cSAffectedModule : cSAffectedModules) {
+            if (moduleBasedMetadataFiles.containsKey(cSAffectedModule) || moduleBasedAnnotatedClasses.containsKey(cSAffectedModule)) {
 
-                        affectedModules.add(cSAffectedModule);
-                    }
-                }
+                affectedModules.add(cSAffectedModule);
             }
-            return affectedModules;
+        }
+        return affectedModules;
 
 
     }

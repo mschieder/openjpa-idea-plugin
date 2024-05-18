@@ -180,7 +180,7 @@ public class ConfigForm {
     // Utility methods
     //
 
-    static public void setPreferredTableHeight(final JTable table, final int rows) {
+    public static void setPreferredTableHeight(final JTable table, final int rows) {
         final int width = table.getPreferredSize().width;
         final int height = rows * table.getRowHeight();
         table.setPreferredSize(new Dimension(width, height));

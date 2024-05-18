@@ -32,7 +32,7 @@ public final class State {
     }
 
     public Set<String> getMetaDataExtensions() {
-        return new LinkedHashSet<String>(persistentState.getMetaDataExtensions());
+        return new LinkedHashSet<>(persistentState.getMetaDataExtensions());
     }
 
     public void setMetaDataExtensions(final Collection<String> metaDataExtensions) {

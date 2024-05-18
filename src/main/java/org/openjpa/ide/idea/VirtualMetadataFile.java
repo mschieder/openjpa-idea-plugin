@@ -6,6 +6,7 @@ import java.util.Collections;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ModuleRootModel;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -57,21 +58,19 @@ class VirtualMetadataFile {
 
         final String filePath = file.getPath();
         final Project project = module.getProject();
-        final VirtualFile projectBaseDir = project.getBaseDir();
+        final VirtualFile projectBaseDir = ProjectUtil.guessProjectDir(project);
         final String projectBaseDirPath = projectBaseDir == null ? null : projectBaseDir.getPath();
         final ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(module);
         final ModuleRootModel rootModel = moduleRootManager.getModifiableModel();
         final VirtualFile[] contentRoots = rootModel.getContentRoots();
 
         String pathWithoutModuleName = filePath;
-        if (contentRoots.length > 0) {
-            for (final VirtualFile contentRoot : contentRoots) {
-                final String contentRootPath = contentRoot.getPath();
-                if (pathWithoutModuleName.contains(contentRootPath)) {
-                    pathWithoutModuleName =
-                            pathWithoutModuleName.substring(pathWithoutModuleName.indexOf(contentRootPath) + contentRootPath.length());
-                    break;
-                }
+        for (final VirtualFile contentRoot : contentRoots) {
+            final String contentRootPath = contentRoot.getPath();
+            if (pathWithoutModuleName.contains(contentRootPath)) {
+                pathWithoutModuleName =
+                        pathWithoutModuleName.substring(pathWithoutModuleName.indexOf(contentRootPath) + contentRootPath.length());
+                break;
             }
         }
 
@@ -106,7 +105,7 @@ class VirtualMetadataFile {
     }
 
     public Collection<String> getClassNames() {
-        return new ArrayList<String>(this.classNames);
+        return new ArrayList<>(this.classNames);
     }
 
     public String getDisplayFilename() {
@@ -119,7 +118,7 @@ class VirtualMetadataFile {
 
     public Collection<EnhancerItem> toEnhancerItems() {
         final Collection<EnhancerItem> enhancerItems =
-                new ArrayList<EnhancerItem>(this.classNames.size() + (this.annotationBasedOnly ? 0 : 1));
+                new ArrayList<>(this.classNames.size() + (this.annotationBasedOnly ? 0 : 1));
         if (!this.annotationBasedOnly) {
             enhancerItems.add(new EnhancerItem(this, this.file));
         }

@@ -3,7 +3,6 @@ package org.openjpa.ide.idea;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.project.Project;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.intellij.util.xmlb.annotations.XCollection;
 import org.jetbrains.annotations.NotNull;
@@ -24,7 +23,7 @@ public final class PersistentState implements PersistentStateComponent<Persisten
     private boolean enhancerEnabled = true;
 
     @XCollection(elementTypes = String.class)
-    private Collection<String> metaDataExtensions = new ArrayList<String>(Arrays.asList("jdo", "orm"));
+    private Collection<String> metaDataExtensions = new ArrayList<>(Arrays.asList("jdo", "orm"));
 
     /**
      * Indicator if {@link #metaDataExtensions} should be added to compiler resource patterns
@@ -37,18 +36,14 @@ public final class PersistentState implements PersistentStateComponent<Persisten
     private boolean tmpClassLoader = true;
 
     @XCollection(elementTypes = String.class)
-    private Collection<String> enabledModules = new ArrayList<String>();
+    private Collection<String> enabledModules = new ArrayList<>();
 
     @XCollection(elementTypes = String.class)
-    private Collection<String> enabledFiles = new ArrayList<String>();
+    private Collection<String> enabledFiles = new ArrayList<>();
 
     private String api = "JPA";
 
     private String enhancerSupport = "OPENJPA";
-
-    static PersistentState getInstance(Project project) {
-        return project.getService(PersistentState.class);
-    }
 
     public boolean isEnhancerEnabled() {
         return this.enhancerEnabled;
@@ -59,11 +54,11 @@ public final class PersistentState implements PersistentStateComponent<Persisten
     }
 
     public Collection<String> getMetaDataExtensions() {
-        return new LinkedHashSet<String>(this.metaDataExtensions);
+        return new LinkedHashSet<>(this.metaDataExtensions);
     }
 
     public void setMetaDataExtensions(final Collection<String> metaDataExtensions) {
-        this.metaDataExtensions = new LinkedHashSet<String>(metaDataExtensions);
+        this.metaDataExtensions = new LinkedHashSet<>(metaDataExtensions);
     }
 
     public boolean isAddToCompilerResourcePatterns() {
@@ -83,19 +78,19 @@ public final class PersistentState implements PersistentStateComponent<Persisten
     }
 
     public Collection<String> getEnabledModules() {
-        return new LinkedHashSet<String>(this.enabledModules);
+        return new LinkedHashSet<>(this.enabledModules);
     }
 
     public void setEnabledModules(final Collection<String> enabledModules) {
-        this.enabledModules = new LinkedHashSet<String>(enabledModules);
+        this.enabledModules = new LinkedHashSet<>(enabledModules);
     }
 
     public Collection<String> getEnabledFiles() {
-        return new LinkedHashSet<String>(this.enabledFiles);
+        return new LinkedHashSet<>(this.enabledFiles);
     }
 
     public void setEnabledFiles(final Collection<String> enabledFiles) {
-        this.enabledFiles = new LinkedHashSet<String>(enabledFiles);
+        this.enabledFiles = new LinkedHashSet<>(enabledFiles);
     }
 
     public String getApi() {

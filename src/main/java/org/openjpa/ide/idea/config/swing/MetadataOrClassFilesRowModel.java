@@ -1,5 +1,6 @@
 package org.openjpa.ide.idea.config.swing;
 
+import java.io.Serial;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -12,8 +13,9 @@ import org.openjpa.ide.idea.config.MetaDataOrClassFile;
  */
 public class MetadataOrClassFilesRowModel extends AbstractTableModel {
 
+    @Serial
     private static final long serialVersionUID = 1L;
-    private final List<MetaDataOrClassFile> files = new ArrayList<MetaDataOrClassFile>();
+    private final List<MetaDataOrClassFile> files = new ArrayList<>();
 
     public MetadataOrClassFilesRowModel(final Collection<MetaDataOrClassFile> metadataFiles,
                                         final Collection<MetaDataOrClassFile> annotatedFiles) {
@@ -41,27 +43,14 @@ public class MetadataOrClassFilesRowModel extends AbstractTableModel {
 
     @Override
     public String getColumnName(final int columnIndex) {
-        final String columnName;
-        switch (columnIndex) {
-            case (0):
-                columnName = "Enabled";
-                break;
-            case (1):
-                columnName = "Module";
-                break;
-            case (2):
-                columnName = "Class";
-                break;
-            case (3):
-                columnName = "File";
-                break;
-            case (4):
-                columnName = "Path";
-                break;
-            default:
-                throw new IllegalArgumentException("invalid column index for retrieving name: " + columnIndex);
-        }
-        return columnName;
+        return switch (columnIndex) {
+            case (0) -> "Enabled";
+            case (1) -> "Module";
+            case (2) -> "Class";
+            case (3) -> "File";
+            case (4) -> "Path";
+            default -> throw new IllegalArgumentException("invalid column index for retrieving name: " + columnIndex);
+        };
     }
 
 

@@ -135,14 +135,14 @@ final class ProjectConfigurable implements Configurable {
             metaDataFiles = this.createMetadataFilesGuiModel();
             // filter files:
             annotatedClassFiles = this.createAnnotatedClassFilesGuiModel();
-            if (this.state.getEnabledFiles().size() > 0) {
+            if (!this.state.getEnabledFiles().isEmpty()) {
                 applyFilter(annotatedClassFiles, this.state.getEnabledFiles());
             }
             indexReady = true;
         } catch (IndexNotReadyException ignored) {
-            affectedModules = new ArrayList<AffectedModule>(0);
-            metaDataFiles = new ArrayList<MetaDataOrClassFile>(0);
-            annotatedClassFiles = new ArrayList<MetaDataOrClassFile>(0);
+            affectedModules = new ArrayList<>(0);
+            metaDataFiles = new ArrayList<>(0);
+            annotatedClassFiles = new ArrayList<>(0);
         }
         return new GuiState(indexReady,
                 enhancerEnabled,
@@ -163,11 +163,7 @@ final class ProjectConfigurable implements Configurable {
 
     private void applyFilter(List<MetaDataOrClassFile> annotatedClassFiles, Set<String> enabledFiles) {
         for (MetaDataOrClassFile file : annotatedClassFiles) {
-            if (enabledFiles.contains(file.getClassName())) {
-                file.setEnabled(true);
-            } else {
-                file.setEnabled(false);
-            }
+            file.setEnabled(enabledFiles.contains(file.getClassName()));
         }
     }
 
@@ -205,7 +201,7 @@ final class ProjectConfigurable implements Configurable {
     }
 
     private Set<String> getEnabledFilesFromGuiModel(List<MetaDataOrClassFile> metadataFiles) {
-        final Set<String> enableFiles = new HashSet<String>();
+        final Set<String> enableFiles = new HashSet<>();
         if (metadataFiles != null) {
             for (final MetaDataOrClassFile file : metadataFiles) {
                 if (file.isEnabled()) {
@@ -225,12 +221,12 @@ final class ProjectConfigurable implements Configurable {
 
         // TODO: hack to filter modules not supported by enhancer (filtering only possible after updating the state with enhancer settings)
         final List<AffectedModule> affectedModulesGuiModel = getAffectedModulesGuiModel();
-        final Collection<String> filter = new HashSet<String>(affectedModulesGuiModel.size());
+        final Collection<String> filter = new HashSet<>(affectedModulesGuiModel.size());
         for (final AffectedModule affectedModule : affectedModulesGuiModel) {
             filter.add(affectedModule.getName());
         }
 
-        final Collection<String> enhancerSupportedModules = new LinkedHashSet<String>(affectedModulesGuiModel.size());
+        final Collection<String> enhancerSupportedModules = new LinkedHashSet<>(affectedModulesGuiModel.size());
         for (final String enabledModule : this.state.getEnabledModules()) {
             if (filter.contains(enabledModule)) {
                 enhancerSupportedModules.add(enabledModule);
@@ -242,12 +238,12 @@ final class ProjectConfigurable implements Configurable {
 
     private void filterEnhancerSupportedFiles() {
         final List<MetaDataOrClassFile> meta = createAnnotatedClassFilesGuiModel();
-        final Collection<String> filter = new HashSet<String>(meta.size());
+        final Collection<String> filter = new HashSet<>(meta.size());
         for (final MetaDataOrClassFile file : meta) {
             filter.add(file.getClassName());
         }
 
-        final Collection<String> enhancerSupportedFiles = new LinkedHashSet<String>(meta.size());
+        final Collection<String> enhancerSupportedFiles = new LinkedHashSet<>(meta.size());
         for (final String fileName : this.state.getEnabledFiles()) {
             if (filter.contains(fileName)) {
                 enhancerSupportedFiles.add(fileName);
@@ -259,19 +255,19 @@ final class ProjectConfigurable implements Configurable {
 
 
     private List<AffectedModule> getAffectedModulesGuiModel() {
-        final List<AffectedModule> moduleList = new ArrayList<AffectedModule>();
+        final List<AffectedModule> moduleList = new ArrayList<>();
         final List<Module> affectedModules = IdeaProjectUtils.getDefaultAffectedModules(this.state.getEnhancerSupport(), this.project);
 
         for (final Module module : affectedModules) {
             final Set<String> enabledModules = this.state.getEnabledModules();
-            final boolean enabled = enabledModules != null && enabledModules.contains(module.getName());
+            final boolean enabled = enabledModules.contains(module.getName());
             moduleList.add(new AffectedModule(enabled, module.getName()));
         }
         return moduleList;
     }
 
     private static Set<String> getEnabledModulesFromGuiModel(final Iterable<AffectedModule> affectedModules) {
-        final Set<String> enabledModules = new HashSet<String>();
+        final Set<String> enabledModules = new HashSet<>();
         if (affectedModules != null) {
             for (final AffectedModule affectedModule : affectedModules) {
                 if (affectedModule.isEnabled()) {
@@ -298,7 +294,7 @@ final class ProjectConfigurable implements Configurable {
     private static List<MetaDataOrClassFile> createFilesGuiModel(final Map<Module,
             List<VirtualMetadataFile>> metaDataOrAnnotatedClassFiles) {
 
-        final List<MetaDataOrClassFile> metaDataOrClassFiles = new ArrayList<MetaDataOrClassFile>();
+        final List<MetaDataOrClassFile> metaDataOrClassFiles = new ArrayList<>();
         for (final Map.Entry<Module, List<VirtualMetadataFile>> moduleListEntry : metaDataOrAnnotatedClassFiles.entrySet()) {
             for (final VirtualMetadataFile vf : moduleListEntry.getValue()) {
                 for (final String mfClassName : vf.getClassNames()) {
@@ -327,7 +323,7 @@ final class ProjectConfigurable implements Configurable {
     }
 
     private static LinkedHashSet<String> getMetaDataExtensionsSet(final String extensions) {
-        final LinkedHashSet<String> retExtensions = new LinkedHashSet<String>();
+        final LinkedHashSet<String> retExtensions = new LinkedHashSet<>();
         if (extensions != null && !extensions.isEmpty()) {
             final Matcher replacePatternWildCardAll = REPLACE_PATTERN_WILDCARD_ALL.matcher(extensions);
             final Matcher replacePatternWildCardDot = REPLACE_PATTERN_WILDCARD_DOT.matcher(replacePatternWildCardAll.replaceAll(""));
