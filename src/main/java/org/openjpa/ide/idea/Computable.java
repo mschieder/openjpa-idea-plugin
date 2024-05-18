@@ -13,6 +13,7 @@ import com.intellij.openapi.compiler.ValidityState;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiClass;
 import org.jetbrains.annotations.NotNull;
@@ -21,6 +22,7 @@ import org.openjpa.ide.idea.integration.EnhancerProxy;
 import org.openjpa.ide.idea.integration.EnhancerSupport;
 
 import java.io.DataInput;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -391,12 +393,20 @@ class Computable implements SourceInstrumentingCompiler {
     @SuppressWarnings("FeatureEnvy")
     Map<Module, List<VirtualMetadataFile>> getAnnotatedClassFiles(@Nullable final CompileScope compileScope) {
         final LinkedHashMap<Module, List<VirtualMetadataFile>> moduleBasedFiles = new LinkedHashMap<>();
+        final CompileScope projectCompileScope = compileScope == null
+                ? CompilerManager.getInstance(Computable.this.project).createProjectCompileScope(Computable.this.project)
+                : compileScope;
+
+        // ensure that all output directories are accessible
+        for (final Module module : projectCompileScope.getAffectedModules()) {
+            if (Computable.this.state.getEnabledModules().contains(module.getName())) {
+                refreshModuleOutputDirectories(module);
+            }
+        }
 
         final Application application = ApplicationManager.getApplication();
         application.runReadAction(() -> {
-            final CompileScope projectCompileScope = compileScope == null
-                    ? CompilerManager.getInstance(Computable.this.project).createProjectCompileScope(Computable.this.project)
-                    : compileScope;
+
 
             final Set<String> enabledFiles = Computable.this.state.getEnabledFiles();
 
@@ -453,6 +463,24 @@ class Computable implements SourceInstrumentingCompiler {
         });
 
         return moduleBasedFiles;
+    }
+
+    private void refreshModuleOutputDirectories(Module module) {
+        // try to refresh the module output directory, if null.
+        // this could happen after a maven clean.
+        refreshOutputDirectory(module, false);
+        if (state.isIncludeTestClasses()){
+            refreshOutputDirectory(module, true);
+        }
+    }
+
+    private void refreshOutputDirectory(Module module, boolean forTestClasses){
+        String moduleOutputPath;
+        if (CompilerPaths.getModuleOutputDirectory(module, forTestClasses) == null &&
+                (moduleOutputPath = CompilerPaths.getModuleOutputPath(module, forTestClasses)) != null) {
+            VfsUtil.markDirtyAndRefresh(false, true, true,
+                    new File(moduleOutputPath));
+        }
     }
 
     /**

@@ -29,6 +29,7 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <compiler.task execute="AFTER"
+                   order="last"
                    implementation="org.openjpa.ide.idea.EnhancerCompileTask"/>
   </extensions>
 

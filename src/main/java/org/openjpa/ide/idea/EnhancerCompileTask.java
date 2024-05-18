@@ -9,8 +9,8 @@ public class EnhancerCompileTask implements CompileTask {
     private Computable dNEComputable;
 
 
-    private void lazyInit(CompileContext context){
-        if (dNEComputable == null){
+    private void lazyInit(CompileContext context) {
+        if (dNEComputable == null) {
             dNEComputable = EnhancerService.getInstance(context.getProject()).getdNEComputable();
         }
     }
