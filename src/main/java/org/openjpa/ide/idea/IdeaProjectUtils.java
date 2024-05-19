@@ -169,6 +169,21 @@ final class IdeaProjectUtils {
         return packageName.replace('.', '/');
     }
 
+    /**
+     * Convert a class to a path.
+     *
+     * @param psiClass the class
+     * @return the path
+     */
+    public static String classToPath(final PsiClass psiClass) {
+        if (psiClass.getContainingClass() == null){
+            return packageToPath(psiClass.getQualifiedName());
+        }
+        else{
+            return classToPath(psiClass.getContainingClass()) + "$" + psiClass.getName();
+        }
+    }
+
     //
     // Helper methods
     //

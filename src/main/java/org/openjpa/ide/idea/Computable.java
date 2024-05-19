@@ -435,7 +435,7 @@ class Computable implements SourceInstrumentingCompiler {
                                     continue;
                                 }
                                 // convert to path
-                                final String pcClassPath = IdeaProjectUtils.packageToPath(pcClassName) + CLASSFILE_EXTENSION;
+                                final String pcClassPath = IdeaProjectUtils.classToPath(annotatedClass) + CLASSFILE_EXTENSION;
                                 // find file in output path
                                 final VirtualFile pcClassFile = outputDirectory.findFileByRelativePath(pcClassPath);
                                 if (pcClassFile != null && pcClassFile.exists()) {
