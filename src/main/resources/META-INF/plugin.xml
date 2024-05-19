@@ -12,7 +12,7 @@
         </p>
     ]]></change-notes>
   <vendor url="https://github.com/machak">m.milicevic</vendor>
-  <idea-version since-build="232.10227.8"/>
+  <idea-version since-build="241"/>
 
   <extensions defaultExtensionNs="com.intellij">
     <postStartupActivity implementation="org.openjpa.ide.idea.EnhancerProjectStartupActivity"/>
@@ -20,8 +20,8 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <projectConfigurable
-            parentId="tools"
-            displayName="OpenJPA Enhancer"
+            parentId="build"
+            displayName="OpenJpa Enhancer"
             instance="org.openjpa.ide.idea.ProjectConfigurable"
             id="org.openjpa.ide.idea.ProjectConfigurable"
             nonDefaultProject="true"/>

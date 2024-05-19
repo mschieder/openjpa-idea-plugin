@@ -3,9 +3,9 @@ package org.openjpa.ide.idea;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
-import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
 import org.openjpa.ide.idea.integration.EnhancerSupport;
 import org.openjpa.ide.idea.integration.openjpa.EnhancerSupportOpenJpa;
@@ -29,7 +29,7 @@ class EnhancerSupportRegistryDefault implements EnhancerSupportRegistry {
     @NotNull
     public EnhancerSupport getEnhancerSupportById(@NotNull final String id) {
         final EnhancerSupport enhancerSupport = this.supported.get(id);
-        Validate.notNull(enhancerSupport, "no enhancer support for id '" + id + '\'');
+        Objects.requireNonNull(enhancerSupport, "no enhancer support for id '" + id + '\'');
         return enhancerSupport;
     }
 

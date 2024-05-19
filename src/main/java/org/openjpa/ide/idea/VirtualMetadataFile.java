@@ -3,6 +3,7 @@ package org.openjpa.ide.idea;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
@@ -10,8 +11,6 @@ import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ModuleRootModel;
 import com.intellij.openapi.vfs.VirtualFile;
-
-import org.apache.commons.lang.Validate;
 
 /**
  * Abstraction of persistence related metadata.<br/>
@@ -43,10 +42,10 @@ class VirtualMetadataFile {
                         final VirtualFile file,
                         final Collection<String> classNames,
                         final Collection<VirtualFile> classFiles) {
-        Validate.notNull(module, "module is null");
-        Validate.notNull(file, "file is null");
-        Validate.notNull(classNames, "classNames is null");
-        Validate.notNull(classFiles, "classFiles is null");
+        Objects.requireNonNull(module, "module is null");
+        Objects.requireNonNull(file, "file is null");
+        Objects.requireNonNull(classNames, "classNames is null");
+        Objects.requireNonNull(classFiles, "classFiles is null");
         this.module = module;
         this.annotationBasedOnly = annotationBasedOnly;
         this.file = file;

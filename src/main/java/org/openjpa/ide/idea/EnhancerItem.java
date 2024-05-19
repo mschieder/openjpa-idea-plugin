@@ -4,9 +4,9 @@ import com.intellij.openapi.compiler.FileProcessingCompiler.ProcessingItem;
 import com.intellij.openapi.compiler.TimestampValidityState;
 import com.intellij.openapi.compiler.ValidityState;
 import com.intellij.openapi.vfs.VirtualFile;
-
-import org.apache.commons.lang.Validate;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 /**
  * File that is target or metadata source for the enhancement process.<br/>
@@ -23,7 +23,7 @@ class EnhancerItem implements ProcessingItem {
     private final VirtualFile classFile;
 
     EnhancerItem(final VirtualMetadataFile virtualMetadata, final VirtualFile classFile) {
-        Validate.notNull(classFile, "classFile is null!");
+        Objects.requireNonNull(classFile, "classFile is null!");
         this.virtualMetadata = virtualMetadata;
         this.classFile = classFile;
     }

@@ -1,6 +1,6 @@
 package org.openjpa.ide.idea.config;
 
-import org.apache.commons.lang.Validate;
+import java.util.Objects;
 
 /**
  */
@@ -17,9 +17,9 @@ public class MetaDataOrClassFile {
     private final String className;
 
     public MetaDataOrClassFile(final String moduleName, final String fileName, final String path, final String className, final boolean enabled) {
-        Validate.notNull(moduleName, "moduleName is null!");
-        Validate.notNull(fileName, "fileName is null!");
-        Validate.notNull(className, "className is null!");
+        Objects.requireNonNull(moduleName, "moduleName is null!");
+        Objects.requireNonNull(fileName, "fileName is null!");
+        Objects.requireNonNull(className, "className is null!");
 
         this.enabled = enabled;
         this.moduleName = moduleName;

@@ -1,4 +1,4 @@
-#  OpenJPA enhancer plugin for Intellij *IDEA* >= 2023.2 IDE
+#  OpenJPA enhancer plugin for Intellij *IDEA* >= 2024.1.1 IDE
 
 ## Build
 
