@@ -5,10 +5,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.compiler.CompileScope;
 import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.project.IndexNotReadyException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.JavaPsiFacade;
@@ -198,4 +201,35 @@ final class IdeaProjectUtils {
         });
     }
 
+    /**
+     * waits max. 1 sec until the FileIndex is ready.
+     *
+     * @param enhancerSupport Determines which classes to search for
+     * @param module          Module to search in
+     * @throws IndexNotReadyException when the index is not ready after 1 sec
+     */
+    public static void waitUntilIndexIsReady(final EnhancerSupport enhancerSupport,
+                                             final Module module) {
+
+        final var application = ApplicationManager.getApplication();
+        for (int i = 0; i < 10; i++) {
+            try {
+                application.runReadAction(() -> {
+                    findPersistenceAnnotatedClasses(enhancerSupport, module);
+                });
+            } catch (IndexNotReadyException e) {
+                // ignore
+                try {
+                    TimeUnit.MILLISECONDS.sleep(100);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+                if (i == 9) {
+                    // after the 9th try throw IndexNotReadyException
+                    throw e;
+                }
+            }
+        }
+
+    }
 }

@@ -468,19 +468,24 @@ class Computable implements SourceInstrumentingCompiler {
     private void refreshModuleOutputDirectories(Module module) {
         // try to refresh the module output directory, if null.
         // this could happen after a maven clean.
-        refreshOutputDirectory(module, false);
+        boolean refreshed = refreshOutputDirectory(module, false);
         if (state.isIncludeTestClasses()){
-            refreshOutputDirectory(module, true);
+            refreshed |= refreshOutputDirectory(module, true);
+        }
+        if (refreshed) {
+            IdeaProjectUtils.waitUntilIndexIsReady(state.getEnhancerSupport(), module);
         }
     }
 
-    private void refreshOutputDirectory(Module module, boolean forTestClasses){
+    private boolean refreshOutputDirectory(Module module, boolean forTestClasses){
         String moduleOutputPath;
         if (CompilerPaths.getModuleOutputDirectory(module, forTestClasses) == null &&
                 (moduleOutputPath = CompilerPaths.getModuleOutputPath(module, forTestClasses)) != null) {
             VfsUtil.markDirtyAndRefresh(false, true, true,
                     new File(moduleOutputPath));
+            return true;
         }
+        return false;
     }
 
     /**
