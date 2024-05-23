@@ -1,17 +1,33 @@
 <idea-plugin>
-  <id>OpenJpaIntegration</id>
-  <name>OpenJpa Enhancer integration</name>
+  <id>io.github.mschieder.openjpa-idea-plugin</id>
+  <name>OpenJpa Enhancer</name>
   <description><![CDATA[
+  Integration of the OpenJpa JPA class enhancer.
+  <p>
+  features:
+  <ul>
+    <li>enhance all persistent classes/test classes in selected modules</li>
+    <li>support for the javax and jakarta namespace</li>
+  </ul>
+  </p>
+  <p>
+  For more information visit the
+  <a href="https://github.com/mschieder/openjpa-idea-plugin">project site</a>.
+  </p>
+  <p>Note: This is a fork of https://github.com/machak/enhancer</p>
 
-    ]]></description>
-  <version>1.00.00</version>
+  ]]></description>
+  <version>1.0.0</version>
   <change-notes><![CDATA[
         <p>
-         <b>1.00.00</b><br/>
-         - initial release
+         <b>1.0.0</b><br/>
+           <ul>
+            <li>support for IntelliJ IDEA 2024.1.1 and later</li>
+            <li>support for Jakarta Persistence</li>
+          </ul>
         </p>
     ]]></change-notes>
-  <vendor url="https://github.com/machak">m.milicevic</vendor>
+  <vendor url="https://github.com/mschieder">Michael Schieder</vendor>
   <idea-version since-build="241"/>
 
   <extensions defaultExtensionNs="com.intellij">

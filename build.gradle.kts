@@ -4,8 +4,8 @@ plugins {
     id("org.jetbrains.intellij") version "1.17.2"
 }
 
-group = "org.onehippo"
-version = "1.00.00-SNAPSHOT"
+group = "io.github.mschieder"
+version = "1.0.0-SNAPSHOT"
 
 repositories {
     mavenCentral()

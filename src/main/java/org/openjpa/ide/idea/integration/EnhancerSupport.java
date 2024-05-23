@@ -17,7 +17,7 @@ import org.openjpa.ide.idea.PersistenceApi;
  */
 public interface EnhancerSupport {
 
-    ExtensionPointName<EnhancerSupport> EP_NAME = ExtensionPointName.create("OpenJpaIntegration.openjpaEnhancerExtension");
+    ExtensionPointName<EnhancerSupport> EP_NAME = ExtensionPointName.create("io.github.mschieder.openjpa-idea-plugin.openjpaEnhancerExtension");
 
     /**
      * The name to display in the configuration dialog enhancer support drop-down.
