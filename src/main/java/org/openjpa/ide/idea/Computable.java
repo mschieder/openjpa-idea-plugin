@@ -438,7 +438,14 @@ class Computable implements SourceInstrumentingCompiler {
                                 // convert to path
                                 final String pcClassPath = IdeaProjectUtils.classToPath(annotatedClass) + CLASSFILE_EXTENSION;
                                 // find file in output path
-                                final VirtualFile pcClassFile = outputDirectory.findFileByRelativePath(pcClassPath);
+                                VirtualFile pcClassFile = outputDirectory.findFileByRelativePath(pcClassPath);
+
+                                 if (pcClassFile == null && new File(outputDirectory.getPath() + "/" + pcClassPath).exists()){
+                                     // create a special virtual file, if the class file exists on the real file system
+                                     // this could happen, if a complete new persistent class is compiled
+                                     pcClassFile = new RealVirtualFile(new File(outputDirectory.getPath() + "/" + pcClassPath));
+                                }
+
                                 if (pcClassFile != null && pcClassFile.exists()) {
                                     moduleFiles
                                             .add(new VirtualMetadataFile(module, true, pcClassFile,
