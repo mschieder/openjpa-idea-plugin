@@ -208,7 +208,9 @@ final class ProjectConfigurable implements Configurable {
         // TODO: hack to filter modules not supported by enhancer (filtering only possible after updating the state with enhancer settings)
         this.filterEnhancerSupportedModules();
 
-        this.filterEnhancerSupportedFiles();
+        if (!state.isEnhanceAllPersistentClasses()) {
+            this.filterEnhancerSupportedFiles();
+        }
     }
 
     private Set<String> getEnabledFilesFromGuiModel(List<MetaDataOrClassFile> metadataFiles) {
