@@ -27,8 +27,13 @@
           </ul>
         </p>
     ]]></change-notes>
+
+  <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.modules.java</depends>
+
   <vendor url="https://github.com/mschieder">Michael Schieder</vendor>
   <idea-version since-build="241"/>
+
 
   <extensions defaultExtensionNs="com.intellij">
     <postStartupActivity implementation="org.openjpa.ide.idea.EnhancerProjectStartupActivity"/>
