@@ -431,7 +431,8 @@ class Computable implements SourceInstrumentingCompiler {
                                 final String pcClassName = annotatedClass.getQualifiedName();
                                 // skip disabled files
 
-                                if (pcClassName == null || (compileScope != null && !enabledFiles.contains(pcClassName))) {
+                                if (pcClassName == null || (compileScope != null &&
+                                        (!state.isEnhanceAllPersistentClasses() && !enabledFiles.contains(pcClassName)))) {
                                     continue;
                                 }
                                 // convert to path
@@ -469,7 +470,7 @@ class Computable implements SourceInstrumentingCompiler {
         // try to refresh the module output directory, if null.
         // this could happen after a maven clean.
         boolean refreshed = refreshOutputDirectory(module, false);
-        if (state.isIncludeTestClasses()){
+        if (state.isIncludeTestClasses()) {
             refreshed |= refreshOutputDirectory(module, true);
         }
         if (refreshed) {
@@ -477,7 +478,7 @@ class Computable implements SourceInstrumentingCompiler {
         }
     }
 
-    private boolean refreshOutputDirectory(Module module, boolean forTestClasses){
+    private boolean refreshOutputDirectory(Module module, boolean forTestClasses) {
         String moduleOutputPath;
         if (CompilerPaths.getModuleOutputDirectory(module, forTestClasses) == null &&
                 (moduleOutputPath = CompilerPaths.getModuleOutputPath(module, forTestClasses)) != null) {

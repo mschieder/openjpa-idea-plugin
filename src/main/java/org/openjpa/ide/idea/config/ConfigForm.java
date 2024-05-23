@@ -70,6 +70,7 @@ public class ConfigForm {
     private JCheckBox addDefaultConstructor;
     private JCheckBox enforcePropertyRestrictions;
     private JCheckBox tmpClassLoader;
+    private JCheckBox enhanceAllPersistentClasses;
 
     //
     // Interface with ProjectComponent
@@ -103,6 +104,10 @@ public class ConfigForm {
         if (this.tmpClassLoader.isSelected() != data.isTmpClassLoader()) {
             return true;
         }
+        if (this.enhanceAllPersistentClasses.isSelected() != data.isTmpClassLoader()){
+            return true;
+        }
+
         if (!this.hibernateRadioButton.isSelected() && PersistenceApi.HIBERNATE == data.getApi()) {
             return true;
         }
@@ -312,7 +317,7 @@ public class ConfigForm {
                 GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null,
                 null, 0, false));
         final JLabel label3 = new JLabel();
-        label3.setText("Please click 'Make Project' to see affected files");
+        label3.setText("Please click 'Build Project' to see affected files");
         infoPanel.add(label3, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE,
                 GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0,
                 false));
@@ -393,12 +398,24 @@ public class ConfigForm {
         this.addDefaultConstructor.setSelected(data.isAddDefaultConstructor());
         this.enforcePropertyRestrictions.setSelected(data.isEnforcePropertyRestrictions());
         this.tmpClassLoader.setSelected(data.isTmpClassLoader());
+        this.enhanceAllPersistentClasses.setSelected(data.isEnhanceAllPersistentClasses());
 
         //
         // Panel displaying an info message if enhancer is not initialized
 
         this.infoPanel.setVisible(!data.isEnhancerInitialized());
         this.infoPanel.setEnabled(!data.isEnhancerInitialized());
+
+        JLabel label = (JLabel) this.infoPanel.getComponent(0);
+        if (data.isEnhanceAllPersistentClasses()){
+            //disable the table in "enhance all persistent classes" mode
+            label.setText("enhancing all persistent classes in the selected modules");
+            this.infoPanel.setVisible(true);
+        }
+        else{
+            label.setText("Please click 'Build Project' to see affected files");
+            this.infoPanel.setVisible(false);
+        }
 
         //
         // Table displaying affected modules if enhancer is initialized
@@ -412,7 +429,7 @@ public class ConfigForm {
         firstColumn.setMinWidth(50);
         firstColumn.setMaxWidth(50);
         firstColumn.setPreferredWidth(150);
-        this.affectedModulesTable.setDefaultEditor(Boolean.class, new BooleanTableCellEditor(false));
+        this.affectedModulesTable.setDefaultEditor(Boolean.class, new BooleanTableCellEditor());
         setPreferredTableHeight(this.affectedModulesTable, this.affectedModulesTable.getRowCount());
 
         //
@@ -423,7 +440,7 @@ public class ConfigForm {
         this.metadataAndClassesTable.setModel(metadataOrClassFilesRowModel);
         // set column appearance
         this.metadataAndClassesTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        this.metadataAndClassesTable.setDefaultEditor(Boolean.class, new BooleanTableCellEditor(false));
+        this.metadataAndClassesTable.setDefaultEditor(Boolean.class, new BooleanTableCellEditor());
         // adjust column sizes (after being rendered the first time - necessary for ColumnAdjuster to work)
         final ColumnAdjuster columnAdjuster = new ColumnAdjuster(this.metadataAndClassesTable);
         //columnAdjuster.setOnlyAdjustLarger(false);
@@ -445,6 +462,7 @@ public class ConfigForm {
         data.setAddDefaultConstructor(this.addDefaultConstructor.isSelected());
         data.setEnforcePropertyRestrictions(this.enforcePropertyRestrictions.isSelected());
         data.setTmpClassLoader(this.tmpClassLoader.isSelected());
+        data.setEnhanceAllPersistentClasses(this.enhanceAllPersistentClasses.isSelected());
 
         final EnhancerSupport enhancerSupport = getByEnhancerSupportName(data, (String) this.persistenceImplComboBox.getSelectedItem());
         data.setEnhancerSupport(enhancerSupport);

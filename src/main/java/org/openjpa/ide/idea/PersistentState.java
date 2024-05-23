@@ -34,6 +34,7 @@ public final class PersistentState implements PersistentStateComponent<Persisten
     private boolean addDefaultConstructor = true;
     private boolean enforcePropertyRestrictions = true;
     private boolean tmpClassLoader = true;
+    private boolean enhanceAllPersistentClasses = true;
 
     @XCollection(elementTypes = String.class)
     private Collection<String> enabledModules = new ArrayList<>();
@@ -132,6 +133,14 @@ public final class PersistentState implements PersistentStateComponent<Persisten
 
     public void setTmpClassLoader(boolean tmpClassLoader) {
         this.tmpClassLoader = tmpClassLoader;
+    }
+
+    public boolean isEnhanceAllPersistentClasses() {
+        return enhanceAllPersistentClasses;
+    }
+
+    public void setEnhanceAllPersistentClasses(boolean enhanceAllPersistentClasses) {
+        this.enhanceAllPersistentClasses = enhanceAllPersistentClasses;
     }
 
     @Override
