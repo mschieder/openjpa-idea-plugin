@@ -1,9 +1,21 @@
 package org.openjpa.ide.idea;
 
+import com.intellij.compiler.CompilerConfiguration;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.options.Configurable;
+import com.intellij.openapi.project.IndexNotReadyException;
+import com.intellij.openapi.project.Project;
+import org.jetbrains.annotations.Nls;
+import org.openjpa.ide.idea.config.AffectedModule;
+import org.openjpa.ide.idea.config.ConfigForm;
+import org.openjpa.ide.idea.config.GuiState;
+import org.openjpa.ide.idea.config.MetaDataOrClassFile;
+import org.openjpa.ide.idea.integration.EnhancerSupport;
+
+import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -11,43 +23,15 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.Icon;
-import javax.swing.JComponent;
-import javax.swing.JOptionPane;
-
-import com.intellij.compiler.CompilerConfiguration;
-import com.intellij.openapi.compiler.CompilerManager;
-import com.intellij.openapi.components.AbstractProjectComponent;
-import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StorageScheme;
-import com.intellij.openapi.extensions.ExtensionPointName;
-import com.intellij.openapi.extensions.Extensions;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.options.Configurable;
-import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.project.IndexNotReadyException;
-import com.intellij.openapi.project.Project;
-
-import org.jetbrains.annotations.Nls;
-import org.jetbrains.annotations.NonNls;
-import org.jetbrains.annotations.NotNull;
-import org.openjpa.ide.idea.config.AffectedModule;
-import org.openjpa.ide.idea.config.ConfigForm;
-import org.openjpa.ide.idea.config.GuiState;
-import org.openjpa.ide.idea.config.MetaDataOrClassFile;
-import org.openjpa.ide.idea.integration.EnhancerSupport;
-
 /**
- * Component registering the enhancer computable and handling the plugin's state
- * (Interacting with configuration GUI by converting between the different state models)
+ * Provides controller functionality for application settings.
  */
-@com.intellij.openapi.components.State(name = "OpenJpaConfiguration",
-        storages = {@Storage(id = "default", file = "$PROJECT_FILE$"),
-                @Storage(id = "dir", file = "$PROJECT_CONFIG_DIR$/openjpa-plugin.xml", scheme = StorageScheme.DIRECTORY_BASED)})
-public class ProjectComponent extends AbstractProjectComponent implements Configurable, PersistentStateComponent<PersistentState> {
+final class ProjectConfigurable implements Configurable {
 
-    public static final ExtensionPointName<EnhancerSupport> EP_NAME = ExtensionPointName.create(EnhancerSupport.EXTENSION_POINT_NAME);
+    private ConfigForm configGuiForm = null;
+    private final Project project;
+    private final State state;
+    private final EnhancerService enhancerService;
 
     private static final String RESOURCE_PATTERN_PREFIX = "?*.";
 
@@ -57,110 +41,11 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
 
     private static final Pattern PATTERN_EXTENSION_SEPARATOR = Pattern.compile(";");
 
-    //
-    // Members
-    //
+    public ProjectConfigurable(Project project){
+        this.project = project;
+        this.enhancerService = EnhancerService.getInstance(project);
+        this.state = State.getInstance(project);
 
-    /**
-     * Current project
-     */
-    private final Project project;
-
-    /**
-     * Persistent configuration
-     */
-    private final State state = new State();
-
-    /**
-     * Enhancer instance (created on first build run)
-     */
-    private Computable dNEComputable = null;
-
-    private ConfigForm configGuiForm = null;
-
-    //
-    // Constructor
-    //
-
-    public ProjectComponent(final Project p) {
-        super(p);
-        this.project = p;
-        final EnhancerSupportRegistry enhancerSupportRegistry = this.state.getEnhancerSupportRegistry();
-        enhancerSupportRegistry.registerEnhancerSupport(EnhancerSupportRegistryDefault.DEFAULT_ENHANCER_SUPPORT);
-        final EnhancerSupport[] enhancerSupports =
-                (EnhancerSupport[]) Extensions.getExtensions(EnhancerSupport.EXTENSION_POINT_NAME);
-
-        for (final EnhancerSupport enhancerSupport : enhancerSupports) {
-            enhancerSupportRegistry.registerEnhancerSupport(enhancerSupport);
-        }
-    }
-
-    //
-    // ProjectComponent Interface implementation
-    //
-
-    @Override
-    public void projectOpened() {
-        super.projectOpened();
-        this.dNEComputable = new Computable(this.project, ProjectComponent.this.state);
-        // run enhancer after compilation
-        final CompilerManager compilerManager = CompilerManager.getInstance(this.project);
-        compilerManager.addCompiler(this.dNEComputable);
-    }
-
-    @SuppressWarnings("RefusedBequest")
-    @NonNls
-    @NotNull
-    @Override
-    public String getComponentName() {
-        return "OpenJpa Enhancer";
-    }
-
-    //
-    // ToggleEnableAction methods
-    //
-
-    public void setEnhancerEnabled(final boolean enabled) {
-        this.state.setEnhancerEnabled(enabled);
-    }
-
-    //
-    // PersistentStateComponent Interface implementation
-    //
-
-    @Override
-    public PersistentState getState() {
-        final PersistentState persistentState = new PersistentState();
-        return persistentState.copyFrom(this.state);
-    }
-
-    @SuppressWarnings("FeatureEnvy")
-    @Override
-    public void loadState(final PersistentState state) {
-        this.state.copyFrom(state);
-
-        //
-        // Validate configuration
-
-        final EnhancerSupport stateEnhancerSupport = this.state.getEnhancerSupport();
-        final String stateEnhancerSupportId = stateEnhancerSupport.getId();
-        final String persistentStateEnhancerSupportId = state.getEnhancerSupport();
-
-        if (!stateEnhancerSupportId.equals(persistentStateEnhancerSupportId)) {
-            JOptionPane.showMessageDialog(null, "Settings Error: Reverted OpenJpa enhancer support from "
-                    + persistentStateEnhancerSupportId
-                    + " to " + stateEnhancerSupportId
-                    + ".\nPlease reset plugin configuration.");
-        }
-        final PersistenceApi api = this.state.getApi();
-        final String stateApi = api.name();
-        final String persistentStateApi = state.getApi();
-        if (!stateApi.equals(persistentStateApi)) {
-            JOptionPane.showMessageDialog(null, "Settings Error: Reverted OpenJpa enhancer api from "
-                    + persistentStateApi
-                    + " to " + stateApi
-                    + ".\nPlease reset plugin configuration.");
-        }
     }
 
     //
@@ -193,7 +78,7 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
 
     @SuppressWarnings("FeatureEnvy")
     @Override
-    public void apply() throws ConfigurationException {
+    public void apply() {
         final GuiState guiState = new GuiState(this.state.getEnhancerSupportRegistry());
         this.configGuiForm.getData(guiState);
         this.setGuiState(guiState);
@@ -239,7 +124,7 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
         final boolean addDefaultConstructor = this.state.isAddDefaultConstructor();
         final boolean enforcePropertyRestrictions = this.state.isEnforcePropertyRestrictions();
         final boolean tmpClassLoader = this.state.isTmpClassLoader();
-        final boolean enhancerInitialized = this.dNEComputable != null;
+        final boolean enhancerInitialized = enhancerService.isEnhancerInitialized();
         final PersistenceApi api = this.state.getApi();
         final EnhancerSupport enhancerSupport = this.state.getEnhancerSupport();
         List<AffectedModule> affectedModules;
@@ -250,14 +135,14 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
             metaDataFiles = this.createMetadataFilesGuiModel();
             // filter files:
             annotatedClassFiles = this.createAnnotatedClassFilesGuiModel();
-            if (this.state.getEnabledFiles().size() > 0) {
+            if (!this.state.getEnabledFiles().isEmpty()) {
                 applyFilter(annotatedClassFiles, this.state.getEnabledFiles());
             }
             indexReady = true;
         } catch (IndexNotReadyException ignored) {
-            affectedModules = new ArrayList<AffectedModule>(0);
-            metaDataFiles = new ArrayList<MetaDataOrClassFile>(0);
-            annotatedClassFiles = new ArrayList<MetaDataOrClassFile>(0);
+            affectedModules = new ArrayList<>(0);
+            metaDataFiles = new ArrayList<>(0);
+            annotatedClassFiles = new ArrayList<>(0);
         }
         return new GuiState(indexReady,
                 enhancerEnabled,
@@ -278,11 +163,7 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
 
     private void applyFilter(List<MetaDataOrClassFile> annotatedClassFiles, Set<String> enabledFiles) {
         for (MetaDataOrClassFile file : annotatedClassFiles) {
-            if (enabledFiles.contains(file.getClassName())) {
-                file.setEnabled(true);
-            } else {
-                file.setEnabled(false);
-            }
+            file.setEnabled(enabledFiles.contains(file.getClassName()));
         }
     }
 
@@ -299,19 +180,20 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
         final EnhancerSupport enhancerSupport = guiState.getEnhancerSupport();
         final Set<String> enabledFiles = getEnabledFilesFromGuiModel(guiState.getMetadataFiles());
         final Set<String> enabledModules = getEnabledModulesFromGuiModel(guiState.getAffectedModules());
-        final State updateState =
-                new State(enhancerEnabled,
-                        metaDataExtensions,
-                        addToCompilerResourcePatterns,
-                        includeTestClasses,
-                        addDefaultConstructor,
-                        enforcePropertyRestrictions,
-                        tmpClassLoader,
-                        enabledModules,
-                        enabledFiles,
-                        api,
-                        enhancerSupport);
-        this.state.copyFrom(updateState);
+
+        this.state.setEnhancerEnabled(enhancerEnabled);
+        this.state.setMetaDataExtensions(metaDataExtensions);
+        this.state.setAddToCompilerResourcePatterns(addToCompilerResourcePatterns);
+        this.state.setIncludeTestClasses(includeTestClasses);
+        this.state.setAddDefaultConstructor(addDefaultConstructor);
+        this.state.setEnforcePropertyRestrictions(enforcePropertyRestrictions);
+        this.state.setTmpClassLoader(tmpClassLoader);
+        this.state.setEnabledModules(enabledModules);
+        this.state.setEnabledFiles(enabledFiles);
+        this.state.setApi(api);
+        this.state.setEnhancerSupport(enhancerSupport);
+
+
         // TODO: hack to filter modules not supported by enhancer (filtering only possible after updating the state with enhancer settings)
         this.filterEnhancerSupportedModules();
 
@@ -319,7 +201,7 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
     }
 
     private Set<String> getEnabledFilesFromGuiModel(List<MetaDataOrClassFile> metadataFiles) {
-        final Set<String> enableFiles = new HashSet<String>();
+        final Set<String> enableFiles = new HashSet<>();
         if (metadataFiles != null) {
             for (final MetaDataOrClassFile file : metadataFiles) {
                 if (file.isEnabled()) {
@@ -330,6 +212,7 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
         return enableFiles;
     }
 
+
     //
     // Gui model helper methods
     //
@@ -338,12 +221,12 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
 
         // TODO: hack to filter modules not supported by enhancer (filtering only possible after updating the state with enhancer settings)
         final List<AffectedModule> affectedModulesGuiModel = getAffectedModulesGuiModel();
-        final Collection<String> filter = new HashSet<String>(affectedModulesGuiModel.size());
+        final Collection<String> filter = new HashSet<>(affectedModulesGuiModel.size());
         for (final AffectedModule affectedModule : affectedModulesGuiModel) {
             filter.add(affectedModule.getName());
         }
 
-        final Collection<String> enhancerSupportedModules = new LinkedHashSet<String>(affectedModulesGuiModel.size());
+        final Collection<String> enhancerSupportedModules = new LinkedHashSet<>(affectedModulesGuiModel.size());
         for (final String enabledModule : this.state.getEnabledModules()) {
             if (filter.contains(enabledModule)) {
                 enhancerSupportedModules.add(enabledModule);
@@ -355,12 +238,12 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
 
     private void filterEnhancerSupportedFiles() {
         final List<MetaDataOrClassFile> meta = createAnnotatedClassFilesGuiModel();
-        final Collection<String> filter = new HashSet<String>(meta.size());
+        final Collection<String> filter = new HashSet<>(meta.size());
         for (final MetaDataOrClassFile file : meta) {
             filter.add(file.getClassName());
         }
 
-        final Collection<String> enhancerSupportedFiles = new LinkedHashSet<String>(meta.size());
+        final Collection<String> enhancerSupportedFiles = new LinkedHashSet<>(meta.size());
         for (final String fileName : this.state.getEnabledFiles()) {
             if (filter.contains(fileName)) {
                 enhancerSupportedFiles.add(fileName);
@@ -372,19 +255,19 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
 
 
     private List<AffectedModule> getAffectedModulesGuiModel() {
-        final List<AffectedModule> moduleList = new ArrayList<AffectedModule>();
+        final List<AffectedModule> moduleList = new ArrayList<>();
         final List<Module> affectedModules = IdeaProjectUtils.getDefaultAffectedModules(this.state.getEnhancerSupport(), this.project);
 
         for (final Module module : affectedModules) {
             final Set<String> enabledModules = this.state.getEnabledModules();
-            final boolean enabled = enabledModules != null && enabledModules.contains(module.getName());
+            final boolean enabled = enabledModules.contains(module.getName());
             moduleList.add(new AffectedModule(enabled, module.getName()));
         }
         return moduleList;
     }
 
     private static Set<String> getEnabledModulesFromGuiModel(final Iterable<AffectedModule> affectedModules) {
-        final Set<String> enabledModules = new HashSet<String>();
+        final Set<String> enabledModules = new HashSet<>();
         if (affectedModules != null) {
             for (final AffectedModule affectedModule : affectedModules) {
                 if (affectedModule.isEnabled()) {
@@ -396,16 +279,14 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
     }
 
     private List<MetaDataOrClassFile> createMetadataFilesGuiModel() {
-        final Map<Module, List<VirtualMetadataFile>> metaDataFiles =
-                this.dNEComputable == null ? new LinkedHashMap<Module, List<VirtualMetadataFile>>()
-                        : this.dNEComputable.getMetadataFiles(null);
+       final Map<Module, List<VirtualMetadataFile>> metaDataFiles =
+                this.enhancerService.getMetadataFiles();
         return createFilesGuiModel(metaDataFiles);
     }
 
     private List<MetaDataOrClassFile> createAnnotatedClassFilesGuiModel() {
         final Map<Module, List<VirtualMetadataFile>> annotatedClassFiles =
-                this.dNEComputable == null ? new LinkedHashMap<Module, List<VirtualMetadataFile>>()
-                        : this.dNEComputable.getAnnotatedClassFiles(null);
+                this.enhancerService.getAnnotatedClassFiles();
         return createFilesGuiModel(annotatedClassFiles);
     }
 
@@ -413,7 +294,7 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
     private static List<MetaDataOrClassFile> createFilesGuiModel(final Map<Module,
             List<VirtualMetadataFile>> metaDataOrAnnotatedClassFiles) {
 
-        final List<MetaDataOrClassFile> metaDataOrClassFiles = new ArrayList<MetaDataOrClassFile>();
+        final List<MetaDataOrClassFile> metaDataOrClassFiles = new ArrayList<>();
         for (final Map.Entry<Module, List<VirtualMetadataFile>> moduleListEntry : metaDataOrAnnotatedClassFiles.entrySet()) {
             for (final VirtualMetadataFile vf : moduleListEntry.getValue()) {
                 for (final String mfClassName : vf.getClassNames()) {
@@ -442,7 +323,7 @@ public class ProjectComponent extends AbstractProjectComponent implements Config
     }
 
     private static LinkedHashSet<String> getMetaDataExtensionsSet(final String extensions) {
-        final LinkedHashSet<String> retExtensions = new LinkedHashSet<String>();
+        final LinkedHashSet<String> retExtensions = new LinkedHashSet<>();
         if (extensions != null && !extensions.isEmpty()) {
             final Matcher replacePatternWildCardAll = REPLACE_PATTERN_WILDCARD_ALL.matcher(extensions);
             final Matcher replacePatternWildCardDot = REPLACE_PATTERN_WILDCARD_DOT.matcher(replacePatternWildCardAll.replaceAll(""));

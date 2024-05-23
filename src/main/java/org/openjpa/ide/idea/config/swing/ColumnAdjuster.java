@@ -51,7 +51,7 @@ public class ColumnAdjuster implements PropertyChangeListener, TableModelListene
 
     private boolean isDynamicAdjustment = false;
 
-    private final Map<TableColumn, Integer> columnSizes = new HashMap<TableColumn, Integer>();
+    private final Map<TableColumn, Integer> columnSizes = new HashMap<>();
 
     /*
       *  Specify the table and use default spacing
@@ -154,9 +154,8 @@ public class ColumnAdjuster implements PropertyChangeListener, TableModelListene
 
         final TableCellRenderer cellRenderer = this.table.getCellRenderer(row, column);
         final Component c = this.table.prepareRenderer(cellRenderer, row, column);
-        final int width = c.getPreferredSize().width + this.table.getIntercellSpacing().width;
+        return c.getPreferredSize().width + this.table.getIntercellSpacing().width;
 
-        return width;
     }
 
     /*
@@ -382,11 +381,6 @@ public class ColumnAdjuster implements PropertyChangeListener, TableModelListene
             }
         }
 
-        @Override
-        protected Object clone() throws CloneNotSupportedException {
-            return super.clone();
-        }
-
     }
 
     /*
@@ -416,11 +410,6 @@ public class ColumnAdjuster implements PropertyChangeListener, TableModelListene
             if (this.isToggleLarger) {
                 setOnlyAdjustLarger(!ColumnAdjuster.this.isOnlyAdjustLarger);
             }
-        }
-
-        @Override
-        protected Object clone() throws CloneNotSupportedException {
-            return super.clone();
         }
 
     }

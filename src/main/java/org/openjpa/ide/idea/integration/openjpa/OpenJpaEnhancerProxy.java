@@ -36,7 +36,7 @@ public class OpenJpaEnhancerProxy extends AbstractEnhancerProxy {
     private final Class<?> optionsClass;
     private final Class<?> configParamClass;
 
-    private List<String> classes = new ArrayList<String>();
+    private final List<String> classes = new ArrayList<>();
 
     final ClassLoader classLoader;
 
@@ -46,11 +46,7 @@ public class OpenJpaEnhancerProxy extends AbstractEnhancerProxy {
                                 final Module module,
                                 final String persistenceUnitName)
             throws IOException,
-            ClassNotFoundException,
-            IllegalAccessException,
-            InstantiationException,
-            InvocationTargetException,
-            NoSuchMethodException {
+            ClassNotFoundException {
 
         super(api, compileContext, module, persistenceUnitName);
 
@@ -67,7 +63,7 @@ public class OpenJpaEnhancerProxy extends AbstractEnhancerProxy {
 
     protected Object createOptions() throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
 
-        Object options = optionsClass.newInstance();
+        Object options = optionsClass.getDeclaredConstructor().newInstance();
         Method method = optionsClass.getMethod("setProperty", String.class, boolean.class);
         method.invoke(options, OPTION_ADD_DEFAULT_CONSTRUCTOR, addDefaultConstructor);
         method.invoke(options, OPTION_ENFORCE_PROPERTY_RESTRICTION, enforcePropertyRestrictions);
@@ -76,7 +72,7 @@ public class OpenJpaEnhancerProxy extends AbstractEnhancerProxy {
     }
 
     private Object createConfig() throws IllegalAccessException, InstantiationException, NoSuchMethodException, InvocationTargetException {
-        Object config = configClass.newInstance();
+        Object config = configClass.getDeclaredConstructor().newInstance();
         Method setSpecification = configClass.getMethod("setSpecification", String.class);
         setSpecification.invoke(config, "jpa");
         return config;
@@ -84,24 +80,24 @@ public class OpenJpaEnhancerProxy extends AbstractEnhancerProxy {
 
 
     @Override
-    public void addClasses(final String... classNames) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+    public void addClasses(final String... classNames) {
         classes.addAll(Arrays.asList(classNames));
     }
 
     @Override
-    public void addMetadataFiles(final String... metadataFiles) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+    public void addMetadataFiles(final String... metadataFiles) {
         // do nothing
     }
 
     @Override
-    public int enhance() throws InvocationTargetException, IllegalAccessException, NoSuchMethodException, InstantiationException, NoSuchFieldException, ClassNotFoundException {
+    public int enhance() throws InvocationTargetException, IllegalAccessException, NoSuchMethodException, InstantiationException {
 
         Object options = createOptions();
         Object jpaConfig = createConfig();
-        String[] args = classes.toArray(new String[classes.size()]);
+        String[] args = classes.toArray(new String[0]);
         Method method = enhancerClass.getMethod("run", configParamClass, String[].class, options.getClass());
 
-        Boolean done = (Boolean) method.invoke(null, jpaConfig, args, options);
+        boolean done = (Boolean) method.invoke(null, jpaConfig, args, options);
         if (done) {
             return classes.size();
         }

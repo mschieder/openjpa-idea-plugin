@@ -1,8 +1,5 @@
 package org.openjpa.ide.idea.integration;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-
 import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.module.Module;
 
@@ -24,13 +21,7 @@ public abstract class AbstractEnhancerProxy implements EnhancerProxy {
     protected AbstractEnhancerProxy(final PersistenceApi api,
                                     final CompileContext compileContext,
                                     final Module module,
-                                    final String persistenceUnitName)
-            throws IOException,
-            ClassNotFoundException,
-            IllegalAccessException,
-            InstantiationException,
-            InvocationTargetException,
-            NoSuchMethodException {
+                                    final String persistenceUnitName) {
 
         this.api = api;
         this.compileContext = compileContext;

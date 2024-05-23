@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import com.intellij.openapi.compiler.CompileContext;
+import com.intellij.openapi.extensions.ExtensionPointName;
 import com.intellij.openapi.module.Module;
 
 import org.jetbrains.annotations.NotNull;
@@ -16,7 +17,7 @@ import org.openjpa.ide.idea.PersistenceApi;
  */
 public interface EnhancerSupport {
 
-    public static final String EXTENSION_POINT_NAME = "OpenJpaIntegration.openjpaEnhancerExtension";
+    ExtensionPointName<EnhancerSupport> EP_NAME = ExtensionPointName.create("OpenJpaIntegration.openjpaEnhancerExtension");
 
     /**
      * The name to display in the configuration dialog enhancer support drop-down.

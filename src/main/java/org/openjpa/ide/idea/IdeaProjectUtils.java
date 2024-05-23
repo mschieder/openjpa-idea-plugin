@@ -5,12 +5,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.compiler.CompileScope;
 import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.project.IndexNotReadyException;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Condition;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
@@ -48,20 +50,18 @@ final class IdeaProjectUtils {
         final CompilerManager compilerManager = CompilerManager.getInstance(project);
         final CompileScope projectCompileScope = compilerManager.createProjectCompileScope(project);
         final Module[] compileScopeAffectedModules = projectCompileScope.getAffectedModules();
-        final List<Module> affectedModules = new ArrayList<Module>(compileScopeAffectedModules.length);
+        final List<Module> affectedModules = new ArrayList<>(compileScopeAffectedModules.length);
 
         //
         // find enhancer class in module dependencies
-        if (compileScopeAffectedModules.length > 0) {
-            for (final Module affectedModule : compileScopeAffectedModules) {
+        for (final Module affectedModule : compileScopeAffectedModules) {
 
-                // query for enhancer class
-                final Query<PsiClass> psiClassQuery = createEnhancerClassQuery(enhancerSupport, affectedModule);
+            // query for enhancer class
+            final Query<PsiClass> psiClassQuery = createEnhancerClassQuery(enhancerSupport, affectedModule);
 
-                // query returns results? -> enhancer present
-                if (psiClassQuery.findFirst() != null) {
-                    affectedModules.add(affectedModule);
-                }
+            // query returns results? -> enhancer present
+            if (psiClassQuery.findFirst() != null) {
+                affectedModules.add(affectedModule);
             }
         }
         return affectedModules;
@@ -77,7 +77,7 @@ final class IdeaProjectUtils {
     static List<VirtualFile> findFilesByExtension(final VirtualFile rootDir,
                                                   final String extension) {
 
-        final List<VirtualFile> children = new LinkedList<VirtualFile>();
+        final List<VirtualFile> children = new LinkedList<>();
 
         // simply iterate directory for finding files
         for (final VirtualFile entry : rootDir.getChildren()) {
@@ -104,7 +104,7 @@ final class IdeaProjectUtils {
      * @return List of virtual classes annotated with corresponding annotations
      */
     static List<PsiClass> findPersistenceAnnotatedClasses(final EnhancerSupport enhancerSupport, final Module module) {
-        final List<PsiClass> annotatedClasses = new ArrayList<PsiClass>();
+        final List<PsiClass> annotatedClasses = new ArrayList<>();
 
         for (final String annotationName : enhancerSupport.getAnnotationNames()) {
             final Collection<PsiClass> psiClasses = findAnnotatedClasses(module, annotationName);
@@ -169,6 +169,21 @@ final class IdeaProjectUtils {
         return packageName.replace('.', '/');
     }
 
+    /**
+     * Convert a class to a path.
+     *
+     * @param psiClass the class
+     * @return the path
+     */
+    public static String classToPath(final PsiClass psiClass) {
+        if (psiClass.getContainingClass() == null){
+            return packageToPath(psiClass.getQualifiedName());
+        }
+        else{
+            return classToPath(psiClass.getContainingClass()) + "$" + psiClass.getName();
+        }
+    }
+
     //
     // Helper methods
     //
@@ -182,26 +197,54 @@ final class IdeaProjectUtils {
      */
     private static Query<PsiClass> createEnhancerClassQuery(final EnhancerSupport enhancerSupport,
                                                             final Module module) {
-        return AllClassesSearch.search(module.getModuleWithLibrariesScope(), module.getProject(), new Condition<String>() {
-            @SuppressWarnings("ConstantConditions") // inspection going wrong as 'equals' variable changes during loop
-            @Override
-            public boolean value(final String s) {
-                final String[] enhancerClassNames = enhancerSupport.getEnhancerClassNames();
-                boolean equals = false;
+        // inspection going wrong as 'equals' variable changes during loop
+        return AllClassesSearch.search(module.getModuleWithLibrariesScope(), module.getProject(), s -> {
+            final String[] enhancerClassNames = enhancerSupport.getEnhancerClassNames();
+            boolean equals = false;
 
-                if (s != null) {
+            if (s != null) {
 
-                    for (final String enhancerClassName : enhancerClassNames) {
-                        equals = equals || s.equals(enhancerClassName);
-                        if (equals) {
-                            break;
-                        }
+                for (final String enhancerClassName : enhancerClassNames) {
+                    equals = s.equals(enhancerClassName);
+                    if (equals) {
+                        break;
                     }
                 }
-
-                return equals;
             }
+
+            return equals;
         });
     }
 
+    /**
+     * waits max. 1 sec until the FileIndex is ready.
+     *
+     * @param enhancerSupport Determines which classes to search for
+     * @param module          Module to search in
+     * @throws IndexNotReadyException when the index is not ready after 1 sec
+     */
+    public static void waitUntilIndexIsReady(final EnhancerSupport enhancerSupport,
+                                             final Module module) {
+
+        final var application = ApplicationManager.getApplication();
+        for (int i = 0; i < 10; i++) {
+            try {
+                application.runReadAction(() -> {
+                    findPersistenceAnnotatedClasses(enhancerSupport, module);
+                });
+            } catch (IndexNotReadyException e) {
+                // ignore
+                try {
+                    TimeUnit.MILLISECONDS.sleep(100);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+                if (i == 9) {
+                    // after the 9th try throw IndexNotReadyException
+                    throw e;
+                }
+            }
+        }
+
+    }
 }

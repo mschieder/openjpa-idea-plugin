@@ -3,6 +3,7 @@ package org.openjpa.ide.idea.config;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import org.openjpa.ide.idea.EnhancerSupportRegistry;
 import org.openjpa.ide.idea.PersistenceApi;
@@ -13,26 +14,26 @@ import org.openjpa.ide.idea.integration.EnhancerSupport;
  */
 public class GuiState {
 
-    private boolean indexReady = false;
+    private boolean indexReady;
 
-    private boolean enhancerEnabled = true;
+    private boolean enhancerEnabled;
 
-    private String metaDataExtensions = "jdo";
+    private String metaDataExtensions;
 
     /**
      * Indicator if {@link #metaDataExtensions} should be added to compiler resource patterns
      */
-    private boolean addToCompilerResourcePatterns = true;
+    private boolean addToCompilerResourcePatterns;
 
-    private boolean includeTestClasses = true;
+    private boolean includeTestClasses;
 
-    private boolean addDefaultConstructor = true;
+    private boolean addDefaultConstructor;
 
-    private boolean enforcePropertyRestrictions = true;
+    private boolean enforcePropertyRestrictions;
 
-    private boolean tmpClassLoader = true;
+    private boolean tmpClassLoader;
 
-    private boolean enhancerInitialized = false;
+    private boolean enhancerInitialized;
 
     private PersistenceApi api;
 
@@ -64,9 +65,9 @@ public class GuiState {
                 PersistenceApi.HIBERNATE,
                 enhancerSupportRegistry,
                 enhancerSupportRegistry.getDefaultEnhancerSupport(),
-                new ArrayList<AffectedModule>(0),
-                new ArrayList<MetaDataOrClassFile>(0),
-                new ArrayList<MetaDataOrClassFile>(0));
+                new ArrayList<>(0),
+                new ArrayList<>(0),
+                new ArrayList<>(0));
     }
 
     public GuiState(final boolean indexReady,
@@ -97,9 +98,9 @@ public class GuiState {
         this.api = api;
         this.enhancerSupportRegistry = enhancerSupportRegistry;
         this.enhancerSupport = enhancerSupport;
-        this.affectedModules = new ArrayList<AffectedModule>(affectedModules);
-        this.annotatedClassFiles = new ArrayList<MetaDataOrClassFile>(annotatedClassFiles);
-        this.metadataFiles = new ArrayList<MetaDataOrClassFile>(metadataFiles);
+        this.affectedModules = new ArrayList<>(affectedModules);
+        this.annotatedClassFiles = new ArrayList<>(annotatedClassFiles);
+        this.metadataFiles = new ArrayList<>(metadataFiles);
     }
 
     public GuiState(final GuiState data) {
@@ -122,7 +123,7 @@ public class GuiState {
 
     private static List<MetaDataOrClassFile> deepCopyMetaFilesModules(List<MetaDataOrClassFile> metadataFiles) {
 
-        final List<MetaDataOrClassFile> myCopy = new ArrayList<MetaDataOrClassFile>(metadataFiles.size());
+        final List<MetaDataOrClassFile> myCopy = new ArrayList<>(metadataFiles.size());
         for (final MetaDataOrClassFile file : metadataFiles) {
             myCopy.add(new MetaDataOrClassFile(file.getModuleName(), file.getFileName(), file.getPath(), file.getClassName(), file.isEnabled()));
         }
@@ -207,20 +208,20 @@ public class GuiState {
     }
 
     public List<AffectedModule> getAffectedModules() {
-        return new ArrayList<AffectedModule>(this.affectedModules);
+        return new ArrayList<>(this.affectedModules);
     }
 
     public void setAffectedModules(final List<AffectedModule> affectedModules) {
-        this.affectedModules = new ArrayList<AffectedModule>(affectedModules);
+        this.affectedModules = new ArrayList<>(affectedModules);
     }
 
 
     public List<MetaDataOrClassFile> getMetadataFiles() {
-        return new ArrayList<MetaDataOrClassFile>(this.metadataFiles);
+        return new ArrayList<>(this.metadataFiles);
     }
 
     public List<MetaDataOrClassFile> getAnnotatedClassFiles() {
-        return new ArrayList<MetaDataOrClassFile>(this.annotatedClassFiles);
+        return new ArrayList<>(this.annotatedClassFiles);
     }
 
     public boolean isAddDefaultConstructor() {
@@ -267,16 +268,11 @@ public class GuiState {
             return false;
         }
         if (this.api != null ? this.api != guiState.api : guiState.api != null) {
-            if (this.affectedModules != null ? !this.affectedModules.equals(guiState.affectedModules) : guiState.affectedModules != null) {
+            if (!Objects.equals(this.affectedModules, guiState.affectedModules)) {
                 return false;
             }
         }
-        if (this.metaDataExtensions != null ? !this.metaDataExtensions.equals(guiState.metaDataExtensions)
-                : guiState.metaDataExtensions != null) {
-            return false;
-        }
-
-        return true;
+        return Objects.equals(this.metaDataExtensions, guiState.metaDataExtensions);
     }
 
     @Override
@@ -311,7 +307,7 @@ public class GuiState {
     //
 
     private static List<AffectedModule> deepCopyAffectedModules(final Collection<AffectedModule> affectedModules) {
-        final List<AffectedModule> copyAffectedModules = new ArrayList<AffectedModule>(affectedModules.size());
+        final List<AffectedModule> copyAffectedModules = new ArrayList<>(affectedModules.size());
         for (final AffectedModule affectedModule : affectedModules) {
             copyAffectedModules.add(new AffectedModule(affectedModule.isEnabled(), affectedModule.getName()));
         }

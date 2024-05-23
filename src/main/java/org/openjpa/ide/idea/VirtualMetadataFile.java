@@ -3,14 +3,14 @@ package org.openjpa.ide.idea;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.ModuleRootModel;
 import com.intellij.openapi.vfs.VirtualFile;
-
-import org.apache.commons.lang.Validate;
 
 /**
  * Abstraction of persistence related metadata.<br/>
@@ -42,10 +42,10 @@ class VirtualMetadataFile {
                         final VirtualFile file,
                         final Collection<String> classNames,
                         final Collection<VirtualFile> classFiles) {
-        Validate.notNull(module, "module is null");
-        Validate.notNull(file, "file is null");
-        Validate.notNull(classNames, "classNames is null");
-        Validate.notNull(classFiles, "classFiles is null");
+        Objects.requireNonNull(module, "module is null");
+        Objects.requireNonNull(file, "file is null");
+        Objects.requireNonNull(classNames, "classNames is null");
+        Objects.requireNonNull(classFiles, "classFiles is null");
         this.module = module;
         this.annotationBasedOnly = annotationBasedOnly;
         this.file = file;
@@ -57,21 +57,19 @@ class VirtualMetadataFile {
 
         final String filePath = file.getPath();
         final Project project = module.getProject();
-        final VirtualFile projectBaseDir = project.getBaseDir();
+        final VirtualFile projectBaseDir = ProjectUtil.guessProjectDir(project);
         final String projectBaseDirPath = projectBaseDir == null ? null : projectBaseDir.getPath();
         final ModuleRootManager moduleRootManager = ModuleRootManager.getInstance(module);
         final ModuleRootModel rootModel = moduleRootManager.getModifiableModel();
         final VirtualFile[] contentRoots = rootModel.getContentRoots();
 
         String pathWithoutModuleName = filePath;
-        if (contentRoots.length > 0) {
-            for (final VirtualFile contentRoot : contentRoots) {
-                final String contentRootPath = contentRoot.getPath();
-                if (pathWithoutModuleName.contains(contentRootPath)) {
-                    pathWithoutModuleName =
-                            pathWithoutModuleName.substring(pathWithoutModuleName.indexOf(contentRootPath) + contentRootPath.length());
-                    break;
-                }
+        for (final VirtualFile contentRoot : contentRoots) {
+            final String contentRootPath = contentRoot.getPath();
+            if (pathWithoutModuleName.contains(contentRootPath)) {
+                pathWithoutModuleName =
+                        pathWithoutModuleName.substring(pathWithoutModuleName.indexOf(contentRootPath) + contentRootPath.length());
+                break;
             }
         }
 
@@ -106,7 +104,7 @@ class VirtualMetadataFile {
     }
 
     public Collection<String> getClassNames() {
-        return new ArrayList<String>(this.classNames);
+        return new ArrayList<>(this.classNames);
     }
 
     public String getDisplayFilename() {
@@ -119,7 +117,7 @@ class VirtualMetadataFile {
 
     public Collection<EnhancerItem> toEnhancerItems() {
         final Collection<EnhancerItem> enhancerItems =
-                new ArrayList<EnhancerItem>(this.classNames.size() + (this.annotationBasedOnly ? 0 : 1));
+                new ArrayList<>(this.classNames.size() + (this.annotationBasedOnly ? 0 : 1));
         if (!this.annotationBasedOnly) {
             enhancerItems.add(new EnhancerItem(this, this.file));
         }

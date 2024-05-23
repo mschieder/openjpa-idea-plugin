@@ -1,22 +1,29 @@
 package org.openjpa.ide.idea;
 
+import com.intellij.openapi.components.PersistentStateComponent;
+import com.intellij.openapi.components.Service;
+import com.intellij.openapi.components.Storage;
+import com.intellij.util.xmlb.XmlSerializerUtil;
+import com.intellij.util.xmlb.annotations.XCollection;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 
-import com.intellij.util.xmlb.annotations.AbstractCollection;
-
-import org.openjpa.ide.idea.integration.EnhancerSupport;
-
 /**
  * Holds plugin's persistent state.
  */
-public class PersistentState { // has to be public (for IDEA configuration access)
+@Service(Service.Level.PROJECT)
+@com.intellij.openapi.components.State(name = "OpenJpaConfiguration",
+        storages = {@Storage(value = "openjpa-plugin.xml")})
+public final class PersistentState implements PersistentStateComponent<PersistentState> { // has to be public (for IDEA configuration access)
 
     private boolean enhancerEnabled = true;
 
-    private Collection<String> metaDataExtensions = new ArrayList<String>(Arrays.asList("jdo", "orm"));
+    @XCollection(elementTypes = String.class)
+    private Collection<String> metaDataExtensions = new ArrayList<>(Arrays.asList("jdo", "orm"));
 
     /**
      * Indicator if {@link #metaDataExtensions} should be added to compiler resource patterns
@@ -28,9 +35,11 @@ public class PersistentState { // has to be public (for IDEA configuration acces
     private boolean enforcePropertyRestrictions = true;
     private boolean tmpClassLoader = true;
 
-    private Collection<String> enabledModules = new ArrayList<String>();
+    @XCollection(elementTypes = String.class)
+    private Collection<String> enabledModules = new ArrayList<>();
 
-    private Collection<String> enabledFiles = new ArrayList<String>();
+    @XCollection(elementTypes = String.class)
+    private Collection<String> enabledFiles = new ArrayList<>();
 
     private String api = "JPA";
 
@@ -44,14 +53,12 @@ public class PersistentState { // has to be public (for IDEA configuration acces
         this.enhancerEnabled = enhancerEnabled;
     }
 
-    @AbstractCollection(elementTypes = String.class)
     public Collection<String> getMetaDataExtensions() {
-        return new LinkedHashSet<String>(this.metaDataExtensions);
+        return new LinkedHashSet<>(this.metaDataExtensions);
     }
 
-    @AbstractCollection(elementTypes = String.class)
     public void setMetaDataExtensions(final Collection<String> metaDataExtensions) {
-        this.metaDataExtensions = new LinkedHashSet<String>(metaDataExtensions);
+        this.metaDataExtensions = new LinkedHashSet<>(metaDataExtensions);
     }
 
     public boolean isAddToCompilerResourcePatterns() {
@@ -70,24 +77,20 @@ public class PersistentState { // has to be public (for IDEA configuration acces
         this.includeTestClasses = includeTestClasses;
     }
 
-    @AbstractCollection(elementTypes = String.class)
     public Collection<String> getEnabledModules() {
-        return new LinkedHashSet<String>(this.enabledModules);
+        return new LinkedHashSet<>(this.enabledModules);
     }
 
-    @AbstractCollection(elementTypes = String.class)
     public void setEnabledModules(final Collection<String> enabledModules) {
-        this.enabledModules = new LinkedHashSet<String>(enabledModules);
+        this.enabledModules = new LinkedHashSet<>(enabledModules);
     }
 
-    @AbstractCollection(elementTypes = String.class)
     public Collection<String> getEnabledFiles() {
-        return new LinkedHashSet<String>(this.enabledFiles);
+        return new LinkedHashSet<>(this.enabledFiles);
     }
 
-    @AbstractCollection(elementTypes = String.class)
     public void setEnabledFiles(final Collection<String> enabledFiles) {
-        this.enabledFiles = new LinkedHashSet<String>(enabledFiles);
+        this.enabledFiles = new LinkedHashSet<>(enabledFiles);
     }
 
     public String getApi() {
@@ -131,59 +134,13 @@ public class PersistentState { // has to be public (for IDEA configuration acces
         this.tmpClassLoader = tmpClassLoader;
     }
 
-    /**
-     * Copy method used to update persistent state with plugin's internal state.
-     *
-     * @param state plugin's internal state
-     * @return persistent copy of plugin's internal state
-     */
-    @SuppressWarnings({"FeatureEnvy", "ChainedMethodCall"})
-    public PersistentState copyFrom(final State state) {
-        this.enhancerEnabled = state.isEnhancerEnabled();
-
-        if (this.metaDataExtensions == null) {
-            this.metaDataExtensions = new ArrayList<String>();
-        } else {
-            this.metaDataExtensions.clear();
-        }
-        this.metaDataExtensions.addAll(state.getMetaDataExtensions());
-
-        this.includeTestClasses = state.isIncludeTestClasses();
-        this.addDefaultConstructor = state.isAddDefaultConstructor();
-        this.enforcePropertyRestrictions = state.isEnforcePropertyRestrictions();
-        this.tmpClassLoader = state.isTmpClassLoader();
-
-        if (this.enabledModules == null) {
-            this.enabledModules = new ArrayList<String>();
-        } else {
-            this.enabledModules.clear();
-        }
-        this.enabledModules.addAll(state.getEnabledModules());
-        if (this.enabledFiles == null) {
-            this.enabledFiles = new ArrayList<String>();
-        } else {
-            this.enabledFiles.clear();
-        }
-        this.enabledFiles.addAll(state.getEnabledFiles());
-
-        final EnhancerSupport configuredEnhancerSupport = state.getEnhancerSupport();
-        final EnhancerSupport usedEnhancerSupport;
-        if (configuredEnhancerSupport == null) {
-            usedEnhancerSupport = state.getEnhancerSupportRegistry().getDefaultEnhancerSupport();
-            this.enhancerSupport = usedEnhancerSupport.getId();
-        } else {
-            usedEnhancerSupport = configuredEnhancerSupport;
-            this.enhancerSupport = configuredEnhancerSupport.getId();
-        }
-
-        final PersistenceApi myApi = state.getApi();
-        if (myApi == null || !usedEnhancerSupport.isSupported(myApi)) {
-            this.api = usedEnhancerSupport.getDefaultPersistenceApi().name();
-        } else {
-            this.api = myApi.name();
-        }
-
+    @Override
+    public PersistentState getState() {
         return this;
     }
 
+    @Override
+    public void loadState(@NotNull PersistentState state) {
+        XmlSerializerUtil.copyBean(state, this);
+    }
 }

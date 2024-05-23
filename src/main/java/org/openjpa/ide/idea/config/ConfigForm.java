@@ -6,6 +6,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -28,7 +29,6 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 
-import org.apache.commons.lang.Validate;
 import org.openjpa.ide.idea.EnhancerSupportRegistry;
 import org.openjpa.ide.idea.PersistenceApi;
 import org.openjpa.ide.idea.config.swing.AffectedModulesRowModel;
@@ -180,7 +180,7 @@ public class ConfigForm {
     // Utility methods
     //
 
-    static public void setPreferredTableHeight(final JTable table, final int rows) {
+    public static void setPreferredTableHeight(final JTable table, final int rows) {
         final int width = table.getPreferredSize().width;
         final int height = rows * table.getRowHeight();
         table.setPreferredSize(new Dimension(width, height));
@@ -196,7 +196,7 @@ public class ConfigForm {
                 break;
             }
         }
-        Validate.notNull(ret, "EnhancerSupport value is not supported! value=" + selectedItem);
+        Objects.requireNonNull(ret, "EnhancerSupport value is not supported! value=" + selectedItem);
         return ret;
     }
 

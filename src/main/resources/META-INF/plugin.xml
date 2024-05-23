@@ -1,4 +1,4 @@
-<idea-plugin version="2">
+<idea-plugin>
   <id>OpenJpaIntegration</id>
   <name>OpenJpa Enhancer integration</name>
   <description><![CDATA[
@@ -12,17 +12,26 @@
         </p>
     ]]></change-notes>
   <vendor url="https://github.com/machak">m.milicevic</vendor>
-  <idea-version since-build="8000"/>
+  <idea-version since-build="241"/>
 
-  <application-components>
-    <!-- Add your application components here -->
-  </application-components>
+  <extensions defaultExtensionNs="com.intellij">
+    <postStartupActivity implementation="org.openjpa.ide.idea.EnhancerProjectStartupActivity"/>
+  </extensions>
 
-  <project-components>
-    <component>
-      <implementation-class>org.openjpa.ide.idea.ProjectComponent</implementation-class>
-    </component>
-  </project-components>
+  <extensions defaultExtensionNs="com.intellij">
+    <projectConfigurable
+            parentId="build"
+            displayName="OpenJpa Enhancer"
+            instance="org.openjpa.ide.idea.ProjectConfigurable"
+            id="org.openjpa.ide.idea.ProjectConfigurable"
+            nonDefaultProject="true"/>
+  </extensions>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <compiler.task execute="AFTER"
+                   order="last"
+                   implementation="org.openjpa.ide.idea.EnhancerCompileTask"/>
+  </extensions>
 
   <actions>
     <action id="ToggleDataOpenJpaEnhancer" class="org.openjpa.ide.idea.ToggleEnableAction" text="OpenJpa Enhancer"
@@ -34,5 +43,4 @@
   <extensionPoints>
     <extensionPoint name="openjpaEnhancerExtension" interface="org.openjpa.ide.idea.integration.EnhancerSupport"/>
   </extensionPoints>
-
 </idea-plugin>
