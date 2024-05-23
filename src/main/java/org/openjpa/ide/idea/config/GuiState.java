@@ -35,6 +35,8 @@ public class GuiState {
 
     private boolean enhancerInitialized;
 
+    private boolean enhanceAllPersistentClasses;
+
     private PersistenceApi api;
 
     private EnhancerSupportRegistry enhancerSupportRegistry;
@@ -62,6 +64,7 @@ public class GuiState {
                 false,
                 true,
                 true,
+                true,
                 PersistenceApi.HIBERNATE,
                 enhancerSupportRegistry,
                 enhancerSupportRegistry.getDefaultEnhancerSupport(),
@@ -78,6 +81,7 @@ public class GuiState {
                     final boolean addDefaultConstructor,
                     final boolean enforcePropertyRestrictions,
                     final boolean tmpClassLoader,
+                    final boolean enhanceAllPersistentClasses,
                     final boolean enhancerInitialized,
                     final PersistenceApi api,
                     final EnhancerSupportRegistry enhancerSupportRegistry,
@@ -94,6 +98,7 @@ public class GuiState {
         this.addDefaultConstructor = addDefaultConstructor;
         this.enforcePropertyRestrictions = enforcePropertyRestrictions;
         this.tmpClassLoader = tmpClassLoader;
+        this.enhanceAllPersistentClasses = enhanceAllPersistentClasses;
         this.enhancerInitialized = enhancerInitialized;
         this.api = api;
         this.enhancerSupportRegistry = enhancerSupportRegistry;
@@ -112,6 +117,7 @@ public class GuiState {
                 data.isAddDefaultConstructor(),
                 data.isEnforcePropertyRestrictions(),
                 data.isTmpClassLoader(),
+                data.isEnhanceAllPersistentClasses(),
                 data.isEnhancerInitialized(),
                 data.getApi(),
                 data.getEnhancerSupportRegistry(),
@@ -248,6 +254,13 @@ public class GuiState {
         this.tmpClassLoader = tmpClassLoader;
     }
 
+    public boolean isEnhanceAllPersistentClasses() {
+        return enhanceAllPersistentClasses;
+    }
+
+    public void setEnhanceAllPersistentClasses(boolean enhanceAllPersistentClasses) {
+        this.enhanceAllPersistentClasses = enhanceAllPersistentClasses;
+    }
 
     //
     // java.lang.Object overrides

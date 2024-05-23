@@ -91,6 +91,14 @@ public final class State {
         persistentState.setEnabledModules(enabledModules);
     }
 
+    public boolean isEnhanceAllPersistentClasses(){
+        return persistentState.isEnhanceAllPersistentClasses();
+    }
+
+    public void setEnhanceAllPersistentClasses(boolean enhanceAllPersistentClasses){
+        persistentState.setEnhanceAllPersistentClasses(enhanceAllPersistentClasses);
+    }
+
     public void setEnabledFiles(final Collection<String> files) {
         persistentState.setEnabledFiles(files);
     }

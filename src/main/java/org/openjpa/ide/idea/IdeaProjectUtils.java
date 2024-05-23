@@ -1,6 +1,7 @@
 package org.openjpa.ide.idea;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -46,11 +47,16 @@ final class IdeaProjectUtils {
      * @param project         the project to search in
      * @return List of modules containing appropriate enhancers
      */
-    static List<Module> getDefaultAffectedModules(final EnhancerSupport enhancerSupport, final Project project) {
+    static List<Module> getDefaultAffectedModules(final EnhancerSupport enhancerSupport, final Project project, boolean fast) {
         final CompilerManager compilerManager = CompilerManager.getInstance(project);
         final CompileScope projectCompileScope = compilerManager.createProjectCompileScope(project);
         final Module[] compileScopeAffectedModules = projectCompileScope.getAffectedModules();
         final List<Module> affectedModules = new ArrayList<>(compileScopeAffectedModules.length);
+
+        if (fast){
+            affectedModules.addAll(Arrays.asList(compileScopeAffectedModules));
+            return affectedModules;
+        }
 
         //
         // find enhancer class in module dependencies

@@ -124,6 +124,7 @@ final class ProjectConfigurable implements Configurable {
         final boolean addDefaultConstructor = this.state.isAddDefaultConstructor();
         final boolean enforcePropertyRestrictions = this.state.isEnforcePropertyRestrictions();
         final boolean tmpClassLoader = this.state.isTmpClassLoader();
+        final boolean enhanceAllPersistentClasses = this.state.isEnhanceAllPersistentClasses();
         final boolean enhancerInitialized = enhancerService.isEnhancerInitialized();
         final PersistenceApi api = this.state.getApi();
         final EnhancerSupport enhancerSupport = this.state.getEnhancerSupport();
@@ -132,11 +133,18 @@ final class ProjectConfigurable implements Configurable {
         List<MetaDataOrClassFile> annotatedClassFiles;
         try {
             affectedModules = this.getAffectedModulesGuiModel();
-            metaDataFiles = this.createMetadataFilesGuiModel();
-            // filter files:
-            annotatedClassFiles = this.createAnnotatedClassFilesGuiModel();
-            if (!this.state.getEnabledFiles().isEmpty()) {
-                applyFilter(annotatedClassFiles, this.state.getEnabledFiles());
+            if (!enhanceAllPersistentClasses) {
+                metaDataFiles = this.createMetadataFilesGuiModel();
+                // filter files:
+                annotatedClassFiles = this.createAnnotatedClassFilesGuiModel();
+                if (!this.state.getEnabledFiles().isEmpty()) {
+                    applyFilter(annotatedClassFiles, this.state.getEnabledFiles());
+                }
+            }
+            else{
+                // do not read the annotated classes in "enhanceAllPersistentClasses mode"
+               metaDataFiles = new ArrayList<>(0);
+               annotatedClassFiles = new ArrayList<>(0);
             }
             indexReady = true;
         } catch (IndexNotReadyException ignored) {
@@ -152,6 +160,7 @@ final class ProjectConfigurable implements Configurable {
                 addDefaultConstructor,
                 enforcePropertyRestrictions,
                 tmpClassLoader,
+                enhanceAllPersistentClasses,
                 enhancerInitialized,
                 api,
                 this.state.getEnhancerSupportRegistry(),
@@ -176,6 +185,7 @@ final class ProjectConfigurable implements Configurable {
         final boolean addDefaultConstructor = guiState.isAddDefaultConstructor();
         final boolean enforcePropertyRestrictions = guiState.isEnforcePropertyRestrictions();
         final boolean tmpClassLoader = guiState.isTmpClassLoader();
+        final boolean enhanceAllPersistentClasses = guiState.isEnhanceAllPersistentClasses();
         final PersistenceApi api = guiState.getApi();
         final EnhancerSupport enhancerSupport = guiState.getEnhancerSupport();
         final Set<String> enabledFiles = getEnabledFilesFromGuiModel(guiState.getMetadataFiles());
@@ -188,6 +198,7 @@ final class ProjectConfigurable implements Configurable {
         this.state.setAddDefaultConstructor(addDefaultConstructor);
         this.state.setEnforcePropertyRestrictions(enforcePropertyRestrictions);
         this.state.setTmpClassLoader(tmpClassLoader);
+        this.state.setEnhanceAllPersistentClasses(enhanceAllPersistentClasses);
         this.state.setEnabledModules(enabledModules);
         this.state.setEnabledFiles(enabledFiles);
         this.state.setApi(api);
@@ -256,7 +267,7 @@ final class ProjectConfigurable implements Configurable {
 
     private List<AffectedModule> getAffectedModulesGuiModel() {
         final List<AffectedModule> moduleList = new ArrayList<>();
-        final List<Module> affectedModules = IdeaProjectUtils.getDefaultAffectedModules(this.state.getEnhancerSupport(), this.project);
+        final List<Module> affectedModules = IdeaProjectUtils.getDefaultAffectedModules(this.state.getEnhancerSupport(), this.project, true);
 
         for (final Module module : affectedModules) {
             final Set<String> enabledModules = this.state.getEnabledModules();
