@@ -20,6 +20,12 @@
   <version>1.0.0</version>
   <change-notes><![CDATA[
         <p>
+         <b>1.1.0</b><br/>
+           <ul>
+            <li>support for IntelliJ IDEA 2024.2 and later</li>
+           </ul>
+        </p>
+        <p>
          <b>1.0.0</b><br/>
            <ul>
             <li>support for IntelliJ IDEA 2024.1.1 and later</li>
@@ -31,8 +37,8 @@
   <depends>com.intellij.modules.platform</depends>
   <depends>com.intellij.modules.java</depends>
 
-  <vendor url="https://github.com/mschieder">Michael Schieder</vendor>
-  <idea-version since-build="241"/>
+  <vendor url="https://github.com/mschieder" email="michael.schieder@gmail.com">Michael Schieder</vendor>
+  <idea-version since-build="242" />
 
 
   <extensions defaultExtensionNs="com.intellij">
